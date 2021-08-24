@@ -8,20 +8,28 @@
 #include <windows.h>
 #include <cstdio>
 #include <algorithm>
+#include <windowsx.h>
+#include <dwmapi.h>
 #pragma comment(lib, "Urlmon.lib")
+#pragma comment(lib, "dwmapi.lib")
 #pragma warning(disable: 4996)		//disable warning about wcscpy vs. wcscpy_s
 
 #define WM_USER_SHOWMESSAGE (WM_USER + 0x0001)
 #define WM_USER_INVOKE (WM_USER + 0x0002)
+#define AERO_BORDERLESS (WS_POPUP | WS_THICKFRAME | WS_CAPTION | WS_SYSMENU | WS_MAXIMIZEBOX | WS_MINIMIZEBOX)
+#define BASIC_BORDERLESS (WS_POPUP | WS_THICKFRAME | WS_SYSMENU | WS_MAXIMIZEBOX | WS_MINIMIZEBOX)
 
 using namespace Microsoft::WRL;
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 LPCWSTR CLASS_NAME = L"Photino";
+
 std::mutex invokeLockMutex;
 HINSTANCE Photino::_hInstance;
 HWND messageLoopRootWindowHandle;
 std::map<HWND, Photino*> hwndToPhotino;
+void AdjustMaximizedClientRect(HWND hwnd, RECT& rect);
+LRESULT HitTest(HWND hwnd, POINT cursor);
 
 struct InvokeWaitInfo
 {
@@ -40,14 +48,48 @@ void Photino::Register(HINSTANCE hInstance)
 {
 	_hInstance = hInstance;
 
-	// Register the window class	
-	WNDCLASSW wc = { };
+	// Register the window class
+	static const wchar_t* window_class_name = [&] {
+		WNDCLASSEXW wcx{};
+		wcx.cbSize = sizeof wcx;
+		wcx.style = CS_HREDRAW | CS_VREDRAW;
+		wcx.hInstance = hInstance;
+		wcx.lpfnWndProc = WindowProc;
+		wcx.lpszClassName = CLASS_NAME;
+		wcx.hbrBackground = reinterpret_cast<HBRUSH>(COLOR_WINDOW + 1);
+		wcx.hCursor = LoadCursorW(nullptr, IDC_ARROW);
+
+		const ATOM result = RegisterClassExW(&wcx);
+		if (!result) {
+			std::system_error(
+				std::error_code(::GetLastError(), std::system_category()),
+				"Failed to register window class"
+			);
+		}
+
+		return wcx.lpszClassName;
+	}();
+
+	CLASS_NAME = window_class_name;
+
+	/*WNDCLASSEXW wcx{};
+	wcx.cbSize = sizeof wcx;
+	wcx.style = CS_HREDRAW | CS_VREDRAW;
+	wcx.hInstance = hInstance;
+	wcx.lpfnWndProc = WindowProc;
+	wcx.lpszClassName = CLASS_NAME;
+	wcx.hbrBackground = reinterpret_cast<HBRUSH>(COLOR_WINDOW + 1);
+	wcx.hCursor = LoadCursorW(nullptr, IDC_ARROW);
+
+	RegisterClassExW(&wcx);*/
+
+	/*WNDCLASSW wc = { };
 	wc.lpfnWndProc = WindowProc;
 	wc.hInstance = hInstance;
 	wc.lpszClassName = CLASS_NAME;
 	RegisterClass(&wc);
 
-	SetThreadDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE);
+	SetThreadDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE);*/
 }
 
 
@@ -153,11 +195,11 @@ Photino::Photino(PhotinoInitParams* initParams)
 	}
 
 	//Create the window
-	_hWnd = CreateWindowEx(
+	_hWnd = CreateWindowExW(
 		0,                      //Optional window styles.
 		CLASS_NAME,             //Window class
 		initParams->Title,		//Window text
-		initParams->Chromeless || initParams->FullScreen ? WS_POPUP : WS_OVERLAPPEDWINDOW,	//Window style
+		initParams->Chromeless ? AERO_BORDERLESS : initParams->FullScreen ? WS_POPUP : WS_OVERLAPPEDWINDOW,	//Window style
 
 		// Size and position
 		initParams->Left, initParams->Top, initParams->Width, initParams->Height,
@@ -187,6 +229,14 @@ Photino::Photino(PhotinoInitParams* initParams)
 	if (initParams->Topmost)
 		SetTopmost(true);
 
+	if (initParams->Chromeless) {
+		Photino::SetBorderless(_borderless);
+		Photino::SetBorderlessShadow(_borderlessShadow);
+	}
+	else {
+		_borderless = false;
+	}
+	
 	Photino::Show();
 }
 
@@ -203,10 +253,53 @@ HWND Photino::getHwnd()
 	return _hWnd;
 }
 
+bool Photino::getBorderless()
+{
+	return _borderless;
+}
+
+bool Photino::getBorderlessDrag()
+{
+	return _borderlessDrag;
+}
+
+bool Photino::getBorderlessResize()
+{
+	return _borderlessResize;
+}
+
+
+
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+	
 	switch (uMsg)
 	{
+	case WM_NCCALCSIZE: {
+		Photino* Photino = hwndToPhotino[hwnd];
+		if (wParam == TRUE && Photino->getBorderless()) {
+			auto& params = *reinterpret_cast<NCCALCSIZE_PARAMS*>(lParam);
+			AdjustMaximizedClientRect(hwnd, params.rgrc[0]);
+			return 0;
+		}
+		break;
+	}
+	case WM_NCHITTEST: {
+		Photino* Photino = hwndToPhotino[hwnd];
+		if (Photino->getBorderless()) {
+			return HitTest(hwnd, POINT{
+				GET_X_LPARAM(lParam),
+				GET_Y_LPARAM(lParam)
+				});
+		}
+		break;
+	}
+	case WM_NCACTIVATE: {
+		if (!Photino::CompositionEnabled()) {
+			return 1;
+		}
+		break;
+	}
 	case WM_CLOSE:
 	{
 		Photino* Photino = hwndToPhotino[hwnd];
@@ -276,7 +369,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	break;
 	}
 
-	return DefWindowProc(hwnd, uMsg, wParam, lParam);
+	return DefWindowProcW(hwnd, uMsg, wParam, lParam);
 }
 
 
@@ -610,6 +703,118 @@ void Photino::Invoke(ACTION callback)
 
 
 //private methods
+void AdjustMaximizedClientRect(HWND hwnd, RECT& rect)
+{
+	bool* isMaximized = nullptr;
+	Photino* photino = hwndToPhotino[hwnd];
+	photino->GetMaximized(isMaximized);
+
+	if (!isMaximized) return;
+
+	HMONITOR monitor = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONULL);
+	if (!monitor) {
+		return;
+	}
+
+	MONITORINFO monitorInfo{};
+	monitorInfo.cbSize = sizeof(monitorInfo);
+	if (!GetMonitorInfoW(monitor, &monitorInfo)) {
+		return;
+	}
+	
+	rect = monitorInfo.rcWork;
+}
+
+LRESULT HitTest(HWND hwnd, POINT cursor)
+{
+	Photino* photino = hwndToPhotino[hwnd];
+
+	const POINT border{
+		GetSystemMetrics(SM_CXFRAME) + GetSystemMetrics(SM_CXPADDEDBORDER),
+		GetSystemMetrics(SM_CYFRAME) + GetSystemMetrics(SM_CXPADDEDBORDER)
+	};
+	RECT window;
+	if (!::GetWindowRect(hwnd, &window)) {
+		return HTNOWHERE;
+	}
+
+	const int drag = photino->getBorderlessDrag() ? HTCAPTION : HTCLIENT;
+
+	enum regionMask {
+		client = 0b0000,
+		left = 0b0001,
+		right = 0b0010,
+		top = 0b0100,
+		bottom = 0b1000,
+	};
+
+	const int result =
+		left * (cursor.x < (window.left + border.x)) |
+		right * (cursor.x >= (window.right - border.x)) |
+		top * (cursor.y < (window.top + border.y)) |
+		bottom * (cursor.y >= (window.bottom - border.y));
+
+	const bool borderlessResize = photino->getBorderlessResize();
+	switch (result) {
+		case left: return borderlessResize ? HTLEFT : drag;
+		case right: return borderlessResize ? HTRIGHT : drag;
+		case top: return borderlessResize ? HTTOP : drag;
+		case bottom: return borderlessResize ? HTBOTTOM : drag;
+		case top | left: return borderlessResize ? HTTOPLEFT : drag;
+		case top | right: return borderlessResize ? HTTOPRIGHT : drag;
+		case bottom | left: return borderlessResize ? HTBOTTOMLEFT : drag;
+		case bottom | right: return borderlessResize ? HTBOTTOMRIGHT : drag;
+		case client: return drag;
+		default: return HTNOWHERE;
+	}
+}
+
+bool Photino::CompositionEnabled()
+{
+	BOOL compositionEnabled = FALSE;
+	bool success = DwmIsCompositionEnabled(&compositionEnabled) == S_OK;
+	return compositionEnabled && success;
+}
+
+LONG_PTR Photino::SelectBorderlessStyle()
+{
+	return CompositionEnabled() ? AERO_BORDERLESS : BASIC_BORDERLESS;
+}
+
+
+void Photino::SetShadow(HWND hwnd, bool enabled)
+{
+	if (CompositionEnabled()) {
+		static const MARGINS shadow_state[2]{ { 0,0,0,0 },{ 1,1,1,1 } };
+		DwmExtendFrameIntoClientArea(hwnd, &shadow_state[enabled]);
+	}
+}
+
+void Photino::SetBorderless(bool enabled)
+{
+	LONG_PTR newStyle = enabled ? SelectBorderlessStyle() : WS_OVERLAPPEDWINDOW;
+	LONG_PTR oldStyle = GetWindowLongPtrW(_hWnd, GWL_STYLE);
+
+	if (newStyle != oldStyle) {
+		_borderless = enabled;
+
+		SetWindowLongPtrW(_hWnd, GWL_STYLE, newStyle);
+		
+		SetShadow(_hWnd, _borderlessShadow && newStyle != WS_OVERLAPPEDWINDOW);
+		
+		SetWindowPos(_hWnd, nullptr, 0, 0, 0, 0, SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE);
+		ShowWindow(_hWnd, SW_SHOW);
+	}
+}
+
+void Photino::SetBorderlessShadow(bool enabled)
+{
+	if (_borderless) {
+		_borderlessShadow = enabled;
+		SetShadow(_hWnd, enabled);
+	}
+}
+
 
 void Photino::AttachWebView()
 {
@@ -794,12 +999,12 @@ void Photino::Show()
 	// Strangely, it only works to create the webview2 *after* the window has been shown,
 	// so defer it until here. This unfortunately means you can't call the Navigate methods
 	// until the window is shown.
-	if (!_webviewController)
+	/*if (!_webviewController)
 	{
 		if (Photino::EnsureWebViewIsInstalled())
 			Photino::AttachWebView();
 		else
 			exit(0);
-	}
+	}*/
 }
 

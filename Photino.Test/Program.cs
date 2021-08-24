@@ -103,7 +103,7 @@ namespace PhotinoNET
                 //StartString = "<h1>Hello Photino!</h1>",
 
                 //Centered = true,
-                //Chromeless = true,
+                Chromeless = true,
                 //FullScreen = true,
                 //Maximized = true,
                 //Minimized = true,

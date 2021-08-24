@@ -106,9 +106,19 @@ private:
 	wil::com_ptr<ICoreWebView2Environment> _webviewEnvironment;
 	wil::com_ptr<ICoreWebView2> _webviewWindow;
 	wil::com_ptr<ICoreWebView2Controller> _webviewController;
+
+	bool _borderless = true;
+	bool _borderlessResize = true;
+	bool _borderlessDrag = true;
+	bool _borderlessShadow = true;
+
 	bool EnsureWebViewIsInstalled();
 	bool InstallWebView2();
 	void AttachWebView();
+	LONG_PTR SelectBorderlessStyle();
+	void SetShadow(HWND hwnd, bool enabled);
+	void SetBorderless(bool enabled);
+	void SetBorderlessShadow(bool enabled);
 #elif __linux__
 	//GtkWidget* _window;
 	GtkWidget* _webview;
@@ -132,6 +142,10 @@ public:
 #ifdef _WIN32
 	static void Register(HINSTANCE hInstance);
 	HWND getHwnd();
+	bool getBorderless();
+	bool getBorderlessDrag();
+	bool getBorderlessResize();
+	static bool CompositionEnabled();
 	void RefitContent();
 #elif __linux__
 	GtkWidget* _window;
