@@ -40,6 +40,7 @@ typedef int (*GetAllMonitorsCallback)(const Monitor* monitor);
 typedef void (*ResizedCallback)(int width, int height);
 typedef void (*MovedCallback)(int x, int y);
 typedef bool (*ClosingCallback)();
+typedef void (*WndProcCallback)(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 class Photino;
 struct PhotinoInitParams
@@ -101,6 +102,7 @@ private:
 	Photino* _parent;
 	void Show();
 #ifdef _WIN32
+	WndProcCallback _wndProcCallback;
 	static HINSTANCE _hInstance;
 	HWND _hWnd;
 	wil::com_ptr<ICoreWebView2Environment> _webviewEnvironment;
@@ -133,6 +135,8 @@ public:
 	static void Register(HINSTANCE hInstance);
 	HWND getHwnd();
 	void RefitContent();
+	void SetWndProcCallback(WndProcCallback callback) { _wndProcCallback = callback; }
+	void InvokeWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) { if (_wndProcCallback) return _wndProcCallback(hWnd, msg, wParam, lParam); }
 #elif __linux__
 	GtkWidget* _window;
 	int _lastHeight;
