@@ -8,7 +8,11 @@
 #include <windows.h>
 #include <cstdio>
 #include <algorithm>
+#include <Uxtheme.h>
+#include <dwmapi.h>
 #pragma comment(lib, "Urlmon.lib")
+#pragma comment(lib, "UxTheme.lib")
+#pragma comment(lib, "Dwmapi.lib")
 #pragma warning(disable: 4996)		//disable warning about wcscpy vs. wcscpy_s
 
 #define WM_USER_SHOWMESSAGE (WM_USER + 0x0001)
@@ -99,6 +103,7 @@ Photino::Photino(PhotinoInitParams* initParams)
 	_contextMenuEnabled = initParams->ContextMenuEnabled;
 	_devToolsEnabled = initParams->DevToolsEnabled;
 	_grantBrowserPermissions = initParams->GrantBrowserPermissions;
+	_chromeless = initParams->Chromeless;
 
 	_zoom = initParams->Zoom;
 
@@ -157,7 +162,7 @@ Photino::Photino(PhotinoInitParams* initParams)
 		0,                      //Optional window styles.
 		CLASS_NAME,             //Window class
 		initParams->Title,		//Window text
-		initParams->Chromeless || initParams->FullScreen ? WS_POPUP : WS_OVERLAPPEDWINDOW,	//Window style
+		initParams->Chromeless ? WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_THICKFRAME | WS_CLIPCHILDREN :  initParams->FullScreen ? WS_POPUP : WS_OVERLAPPEDWINDOW,	//Window style
 
 		// Size and position
 		initParams->Left, initParams->Top, initParams->Width, initParams->Height,
@@ -186,7 +191,7 @@ Photino::Photino(PhotinoInitParams* initParams)
 
 	if (initParams->Topmost)
 		SetTopmost(true);
-
+	
 	Photino::Show();
 }
 
@@ -207,6 +212,18 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg)
 	{
+	case WM_NCCALCSIZE: 
+	{
+		Photino* Photino = hwndToPhotino[hwnd];
+		if (Photino) 
+		{
+			bool chromeless;
+			Photino->GetChromeless(&chromeless);
+			if (chromeless)
+				return 0;
+		}		
+	}
+	break;
 	case WM_CLOSE:
 	{
 		Photino* Photino = hwndToPhotino[hwnd];
@@ -335,6 +352,12 @@ void Photino::GetGrantBrowserPermissions(bool* grant)
 {
 	*grant = _grantBrowserPermissions;
 }
+
+void Photino::GetChromeless(bool* chromeless)
+{
+	*chromeless = _chromeless;
+}
+
 
 void Photino::GetMaximized(bool* isMaximized)
 {
@@ -787,10 +810,20 @@ void Photino::RefitContent()
 	}
 }
 
+void Photino::EnableShadow()
+{
+	const MARGINS shadow = { 1, 1, 1, 1 };
+	DwmExtendFrameIntoClientArea(_hWnd, &shadow);
+	SetWindowPos(_hWnd, 0, 0, 0, 0, 0, SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE);
+}
+
 void Photino::Show()
 {
 	ShowWindow(_hWnd, SW_SHOWDEFAULT);
 
+	if (_chromeless)
+		EnableShadow();
+	
 	// Strangely, it only works to create the webview2 *after* the window has been shown,
 	// so defer it until here. This unfortunately means you can't call the Navigate methods
 	// until the window is shown.

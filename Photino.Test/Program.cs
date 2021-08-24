@@ -102,7 +102,7 @@ namespace PhotinoNET
                 StartUrl = "wwwroot/main.html",
                 //StartString = "<h1>Hello Photino!</h1>",
 
-                //Centered = true,
+                Centered = true,
                 //Chromeless = true,
                 //FullScreen = true,
                 //Maximized = true,

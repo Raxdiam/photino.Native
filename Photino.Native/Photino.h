@@ -128,11 +128,13 @@ public:
 	bool _contextMenuEnabled;
 	bool _devToolsEnabled;
 	bool _grantBrowserPermissions;
+	bool _chromeless = false;
 
 #ifdef _WIN32
 	static void Register(HINSTANCE hInstance);
 	HWND getHwnd();
 	void RefitContent();
+	void EnableShadow();
 #elif __linux__
 	GtkWidget* _window;
 	int _lastHeight;
@@ -153,6 +155,7 @@ public:
 	void GetDevToolsEnabled(bool* enabled);
 	void GetFullScreen(bool* fullScreen);
 	void GetGrantBrowserPermissions(bool* grant);
+	void GetChromeless(bool* chromeless);
 	void GetMaximized(bool* isMaximized);
 	void GetMinimized(bool* isMinimized);
 	void GetPosition(int* x, int* y);
