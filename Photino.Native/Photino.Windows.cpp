@@ -208,6 +208,40 @@ HWND Photino::getHwnd()
 	return _hWnd;
 }
 
+namespace 
+{
+	bool maximized(HWND hwnd) {
+		WINDOWPLACEMENT placement;
+		if (!GetWindowPlacement(hwnd, &placement)) {
+			return false;
+		}
+
+		return placement.showCmd == SW_MAXIMIZE;
+	}
+
+	void adjustMaximizedClientRect(HWND hwnd, RECT& rect)
+	{
+		if (!maximized(hwnd)) {
+			return;
+		}
+
+		auto monitor = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONULL);
+		if (!monitor) {
+			return;
+		}
+
+		MONITORINFO monitor_info{};
+		monitor_info.cbSize = sizeof(monitor_info);
+		if (!::GetMonitorInfoW(monitor, &monitor_info)) {
+			return;
+		}
+		
+		rect = monitor_info.rcWork;
+	}
+}
+
+
+
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg)
@@ -215,15 +249,21 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	case WM_NCCALCSIZE: 
 	{
 		Photino* Photino = hwndToPhotino[hwnd];
-		if (Photino) 
+		if (Photino)
 		{
 			bool chromeless;
 			Photino->GetChromeless(&chromeless);
-			if (chromeless)
+			if (wParam == TRUE && chromeless) {
+				if (maximized(hwnd)) {
+					auto& params = *reinterpret_cast<NCCALCSIZE_PARAMS*>(lParam);
+					adjustMaximizedClientRect(hwnd, params.rgrc[0]);
+				}				
 				return 0;
-		}		
+			}
+			
+		}
+		break;
 	}
-	break;
 	case WM_CLOSE:
 	{
 		Photino* Photino = hwndToPhotino[hwnd];
@@ -290,7 +330,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		}
 		return 0;
 	}
-	break;
 	}
 
 	return DefWindowProc(hwnd, uMsg, wParam, lParam);
@@ -506,8 +545,9 @@ void Photino::SetMinimized(bool minimized)
 
 void Photino::SetMaximized(bool maximized)
 {
-	if (maximized)
+	if (maximized) {
 		ShowWindow(_hWnd, SW_MAXIMIZE);
+	}
 	else
 		ShowWindow(_hWnd, SW_NORMAL);
 }
@@ -812,9 +852,14 @@ void Photino::RefitContent()
 
 void Photino::EnableShadow()
 {
-	const MARGINS shadow = { 1, 1, 1, 1 };
+	SetWindowLongPtrW(_hWnd, GWL_STYLE, static_cast<LONG>(WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_THICKFRAME | WS_CLIPCHILDREN));
+	/*const MARGINS shadow = { 1,1,1,1};
 	DwmExtendFrameIntoClientArea(_hWnd, &shadow);
-	SetWindowPos(_hWnd, 0, 0, 0, 0, 0, SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE);
+	SetWindowPos(_hWnd, 0, 0, 0, 0, 0, SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED | SWP_ASYNCWINDOWPOS | SWP_NOSIZE | SWP_NOMOVE);*/
+	static const MARGINS shadow{ 1,1,1,1 };
+	DwmExtendFrameIntoClientArea(_hWnd, &shadow);
+	SetWindowPos(_hWnd, nullptr, 0, 0, 0, 0, SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE);
+	//ShowWindow(_hWnd, SW_SHOW);
 }
 
 void Photino::Show()

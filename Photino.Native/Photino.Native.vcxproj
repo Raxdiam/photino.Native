@@ -115,7 +115,10 @@
       </Message>
       <Command>COPY .\$(OutDir)Photino.Native.dll ..\Photino.Test\bin\Debug\net5.0\  
 COPY .\$(OutDir)Photino.Native.pdb ..\Photino.Test\bin\Debug\net5.0\
-COPY .\$(OutDir)WebView2Loader.dll ..\Photino.Test\bin\Debug\net5.0\</Command>
+COPY .\$(OutDir)WebView2Loader.dll ..\Photino.Test\bin\Debug\net5.0\
+COPY .\$(OutDir)Photino.Native.dll C:\Users\raxdi\.nuget\packages\photino.native\2.0.18\runtimes\win-x64\native
+COPY .\$(OutDir)Photino.Native.pdb C:\Users\raxdi\.nuget\packages\photino.native\2.0.18\runtimes\win-x64\native
+COPY .\$(OutDir)WebView2Loader.dll C:\Users\raxdi\.nuget\packages\photino.native\2.0.18\runtimes\win-x64\native</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
