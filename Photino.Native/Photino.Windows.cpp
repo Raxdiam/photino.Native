@@ -8,7 +8,10 @@
 #include <windows.h>
 #include <cstdio>
 #include <algorithm>
+#include <windowsx.h>
+#include <dwmapi.h>
 #pragma comment(lib, "Urlmon.lib")
+#pragma comment(lib, "Dwmapi.lib")
 #pragma warning(disable: 4996)		//disable warning about wcscpy vs. wcscpy_s
 
 #define WM_USER_SHOWMESSAGE (WM_USER + 0x0001)
@@ -22,6 +25,63 @@ std::mutex invokeLockMutex;
 HINSTANCE Photino::_hInstance;
 HWND messageLoopRootWindowHandle;
 std::map<HWND, Photino*> hwndToPhotino;
+
+/// <summary>
+/// Thanks to melak47 for BorderlessWindow (https://github.com/melak47/BorderlessWindow)
+/// </summary>
+namespace
+{
+	enum class Style : DWORD {
+		windowed = WS_OVERLAPPEDWINDOW,
+		aero_borderless = WS_POPUP | WS_THICKFRAME | WS_CAPTION | WS_SYSMENU | WS_MAXIMIZEBOX | WS_MINIMIZEBOX,
+		basic_borderless = WS_POPUP | WS_THICKFRAME | WS_SYSMENU | WS_MAXIMIZEBOX | WS_MINIMIZEBOX
+	};
+
+	bool Maximized(HWND hwnd) {
+		WINDOWPLACEMENT placement;
+		if (!GetWindowPlacement(hwnd, &placement)) {
+			return false;
+		}
+
+		return placement.showCmd == SW_MAXIMIZE;
+	}
+
+	void AdjustMaximizedClientRect(HWND hwnd, RECT& rect) {
+		if (!Maximized(hwnd)) {
+			return;
+		}
+
+		HMONITOR monitor = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONULL);
+		if (!monitor) {
+			return;
+		}
+
+		MONITORINFO monitorInfo{};
+		monitorInfo.cbSize = sizeof(monitorInfo);
+		if (!GetMonitorInfoW(monitor, &monitorInfo)) {
+			return;
+		}
+		
+		rect = monitorInfo.rcWork;
+	}
+
+	bool CompositionEnabled() {
+		BOOL compositionEnabled = FALSE;
+		bool success = DwmIsCompositionEnabled(&compositionEnabled) == S_OK;
+		return compositionEnabled && success;
+	}
+
+	Style SelectBorderlessStyle() {
+		return CompositionEnabled() ? Style::aero_borderless : Style::basic_borderless;
+	}
+
+	void SetShadow(HWND hwnd, bool enabled) {
+		if (CompositionEnabled()) {
+			static const MARGINS shadow_state[2]{ { 0,0,0,0 },{ 1,1,1,1 } };
+			DwmExtendFrameIntoClientArea(hwnd, &shadow_state[enabled]);
+		}
+	}
+}
 
 struct InvokeWaitInfo
 {
@@ -40,12 +100,16 @@ void Photino::Register(HINSTANCE hInstance)
 {
 	_hInstance = hInstance;
 
-	// Register the window class	
-	WNDCLASSW wc = { };
-	wc.lpfnWndProc = WindowProc;
-	wc.hInstance = hInstance;
-	wc.lpszClassName = CLASS_NAME;
-	RegisterClass(&wc);
+	// Register the window class
+	WNDCLASSEXW wcx{};
+	wcx.cbSize = sizeof(wcx);
+	wcx.style = CS_HREDRAW | CS_VREDRAW;
+	wcx.hInstance = hInstance;
+	wcx.lpfnWndProc = WindowProc;
+	wcx.lpszClassName = CLASS_NAME;
+	wcx.hbrBackground = reinterpret_cast<HBRUSH>(COLOR_WINDOW + 1);
+	wcx.hCursor = ::LoadCursorW(nullptr, IDC_ARROW);
+	RegisterClassExW(&wcx);
 
 	SetThreadDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE);
 }
@@ -99,6 +163,7 @@ Photino::Photino(PhotinoInitParams* initParams)
 	_contextMenuEnabled = initParams->ContextMenuEnabled;
 	_devToolsEnabled = initParams->DevToolsEnabled;
 	_grantBrowserPermissions = initParams->GrantBrowserPermissions;
+	_chromeless = initParams->Chromeless;
 
 	_zoom = initParams->Zoom;
 
@@ -162,7 +227,7 @@ Photino::Photino(PhotinoInitParams* initParams)
 		0,                      //Optional window styles.
 		CLASS_NAME,             //Window class
 		initParams->Title,		//Window text
-		initParams->Chromeless || initParams->FullScreen ? WS_POPUP : WS_OVERLAPPEDWINDOW,	//Window style
+		initParams->Chromeless ? static_cast<DWORD>(Style::aero_borderless) : initParams->FullScreen ? WS_POPUP : WS_OVERLAPPEDWINDOW,	//Window style
 
 		// Size and position
 		initParams->Left, initParams->Top, initParams->Width, initParams->Height,
@@ -192,6 +257,8 @@ Photino::Photino(PhotinoInitParams* initParams)
 	if (initParams->Topmost)
 		SetTopmost(true);
 
+	SetChromeless(initParams->Chromeless);
+
 	Photino::Show();
 }
 
@@ -208,10 +275,25 @@ HWND Photino::getHwnd()
 	return _hWnd;
 }
 
+bool Photino::getChromeless()
+{
+	return _chromeless;
+}
+
+
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg)
 	{
+	case WM_NCCALCSIZE: {
+		Photino* Photino = hwndToPhotino[hwnd];
+		if (Photino && wParam == TRUE && Photino->getChromeless()) {
+			auto& params = *reinterpret_cast<NCCALCSIZE_PARAMS*>(lParam);
+			AdjustMaximizedClientRect(hwnd, params.rgrc[0]);
+			return 0;
+		}
+		break;
+	}
 	case WM_ACTIVATE:
 	{
 		Photino* Photino = hwndToPhotino[hwnd];
@@ -562,6 +644,23 @@ void Photino::SetZoom(int zoom)
 	//wchar_t msg[50];
 	//swprintf(msg, 50, L"newZoom: %f", newZoom);
 	//MessageBox(nullptr, msg, L"Setter", MB_OK);
+}
+
+void Photino::SetChromeless(bool enabled)
+{
+	Style new_style = enabled ? SelectBorderlessStyle() : Style::windowed;
+	Style old_style = static_cast<Style>(GetWindowLongPtrW(_hWnd, GWL_STYLE));
+
+	if (new_style != old_style) {
+		_chromeless = enabled;
+
+		SetWindowLongPtrW(_hWnd, GWL_STYLE, static_cast<LONG>(new_style));
+		
+		SetShadow(_hWnd, new_style != Style::windowed);
+		
+		SetWindowPos(_hWnd, nullptr, 0, 0, 0, 0, SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE);
+		ShowWindow(_hWnd, SW_SHOW);
+	}
 }
 
 

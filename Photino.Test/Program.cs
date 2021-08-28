@@ -8,6 +8,15 @@ namespace PhotinoNET
 {
     class Program
     {
+        [DllImport("user32.dll")]
+        private static extern int SendMessage(IntPtr hWnd, int msg, int wParam, int lParam);
+
+        [DllImport("user32.dll")]
+        private static extern bool ReleaseCapture();
+
+        private const int WM_NCLBUTTONDOWN = 0xA1;
+        private const int HT_CAPTION = 2;
+
         private static readonly bool _logEvents = true;
         private static int _windowNumber = 1;
 
@@ -104,8 +113,8 @@ namespace PhotinoNET
                 StartUrl = "wwwroot/main.html",
                 //StartString = "<h1>Hello Photino!</h1>",
 
-                //Centered = true,
-                //Chromeless = true,
+                Centered = true,
+                Chromeless = true,
                 //FullScreen = true,
                 //Maximized = true,
                 //Minimized = true,
@@ -145,7 +154,13 @@ namespace PhotinoNET
             };
 
             //Can this be done with a property? 
-            mainWindow.RegisterCustomSchemeHandler("app", AppCustomSchemeUsed);
+            //mainWindow.RegisterCustomSchemeHandler("app", AppCustomSchemeUsed);
+
+            //Windows only messages
+            mainWindow.RegisterWebMessageReceivedHandler((s, e) => {
+                ReleaseCapture();
+                SendMessage(mainWindow.WindowHandle, WM_NCLBUTTONDOWN, HT_CAPTION, 0);
+            });
 
             mainWindow.WaitForClose();
 
@@ -313,8 +328,8 @@ namespace PhotinoNET
                 var properties = GetPropertiesDisplay(currentWindow);
                 currentWindow.OpenAlertWindow("Settings", properties);
             }
-            else
-                throw new Exception($"Unknown message '{message}'");
+            /*else
+                throw new Exception($"Unknown message '{message}'");*/
         }
 
         private static void WindowCreating(object sender, EventArgs e)

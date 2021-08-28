@@ -143,11 +143,14 @@ public:
 	bool _contextMenuEnabled;
 	bool _devToolsEnabled;
 	bool _grantBrowserPermissions;
+	bool _chromeless;
 
 #ifdef _WIN32
 	static void Register(HINSTANCE hInstance);
 	HWND getHwnd();
+	bool getChromeless();
 	void RefitContent();
+	void SetChromeless(bool enabled);
 #elif __linux__
 	GtkWidget* _window;
 	int _lastHeight;

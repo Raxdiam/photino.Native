@@ -40,7 +40,7 @@
         function SetContextMenuEnabled() {
             window.external.sendMessage('setcontextmenuenabled');
         }
-        
+
         function SetDevToolsEnabled() {
             window.external.sendMessage('setdevtoolsenabled');
         }
@@ -85,7 +85,6 @@
             window.external.sendMessage('showproperties');
         }
 
-
         //Photo stuff
         //https://github.com/mdn/samples-server/tree/master/s/webrtc-capturestill
         (function () {
@@ -96,12 +95,14 @@
             var canvas = null;
             var photo = null;
             var startbutton = null;
+            var titlebar = null;
 
             function startup() {
                 video = document.getElementById('video');
                 canvas = document.getElementById('canvas');
                 photo = document.getElementById('photo');
                 startbutton = document.getElementById('startbutton');
+                titlebar = document.getElementById('window-titlebar');
 
                 navigator.mediaDevices.getUserMedia({ video: true, audio: false })
                     .then(function (stream) {
@@ -130,6 +131,12 @@
                 startbutton.addEventListener('click', function (ev) {
                     takepicture();
                     ev.preventDefault();
+                }, false);
+
+                titlebar.addEventListener('mousedown', function (e) {
+                    window.external.sendMessage('drag');
+                    e.preventDefault();
+                    e.stopPropagation();
                 }, false);
 
                 clearphoto();
@@ -161,8 +168,24 @@
             window.addEventListener('load', startup, false);
         })();
     </script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        #window-titlebar {
+            width: 100%;
+            height: 30px;
+            background: gainsboro;
+        }
+    </style>
 </head>
 <body>
+    <div id="window-titlebar"></div>
+
     <h1 id="Title"></h1>
 
     <button onclick="OpenChildWindow()">Open Child Window</button>
