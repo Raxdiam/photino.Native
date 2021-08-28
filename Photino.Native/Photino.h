@@ -43,6 +43,8 @@ typedef void (*RestoredCallback)();
 typedef void (*MinimizedCallback)();
 typedef void (*MovedCallback)(int x, int y);
 typedef bool (*ClosingCallback)();
+typedef void (*FocusInCallback)();
+typedef void (*FocusOutCallback)();
 
 class Photino;
 struct PhotinoInitParams
@@ -56,6 +58,8 @@ struct PhotinoInitParams
 	Photino* ParentInstance;
 
 	ClosingCallback* ClosingHandler;
+	FocusInCallback* FocusInHandler;
+	FocusOutCallback* FocusOutHandler;
 	ResizedCallback* ResizedHandler;
 	MaximizedCallback* MaximizedHandler;
 	RestoredCallback* RestoredHandler;
@@ -97,6 +101,8 @@ private:
 	RestoredCallback _restoredCallback;
 	MinimizedCallback _minimizedCallback;
 	ClosingCallback _closingCallback;
+	FocusInCallback _focusInCallback;
+	FocusOutCallback _focusOutCallback;
 	std::vector<AutoString> _customSchemeNames;
 	WebResourceRequestedCallback _customSchemeCallback;
 
@@ -198,6 +204,8 @@ public:
 	void AddCustomSchemeName(AutoString scheme) { _customSchemeNames.push_back((AutoString)scheme); };
 	void GetAllMonitors(GetAllMonitorsCallback callback);
 	void SetClosingCallback(ClosingCallback callback) { _closingCallback = callback; }
+	void SetFocusInCallback(FocusInCallback callback) { _focusInCallback = callback; }
+	void SetFocusOutCallback(FocusOutCallback callback) { _focusOutCallback = callback; }
 	void SetMovedCallback(MovedCallback callback) { _movedCallback = callback; }
 	void SetResizedCallback(ResizedCallback callback) { _resizedCallback = callback; }
 	void SetMaximizedCallback(MaximizedCallback callback) { _maximizedCallback = callback; }
@@ -206,6 +214,8 @@ public:
 
 	void Invoke(ACTION callback);
 	bool InvokeClose() { if (_closingCallback) return _closingCallback(); else return false; }
+	void InvokeFocusIn() { if (_focusInCallback) return _focusInCallback(); }
+	void InvokeFocusOut() { if (_focusOutCallback) return _focusOutCallback(); }
 	void InvokeMove(int x, int y) { if (_movedCallback) _movedCallback(x, y); }
 	void InvokeResize(int width, int height) { if (_resizedCallback) _resizedCallback(width, height); }
 	void InvokeMaximized() { if (_maximizedCallback) return _maximizedCallback(); }
