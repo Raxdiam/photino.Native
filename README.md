@@ -1,3 +1,16 @@
+# \*\*\*Experimental\*\*\*
+
+This is an experimental branch of Photino.Native which includes all working changes from other branches.
+Most changes on this branch will be windows-focused.
+
+[Experimental branch of Photino.NET here](https://github.com/Raxdiam/photino.NET/tree/experimental)
+
+## Changes
+* Windows - Chromeless window shadow
+* Windows - Chromeless window Aero features (i.e. dragging the window to the top of the screen will maximize it)
+* Windows/Linux - Focus in/out events
+* Windows - Maximize, restore, and minimize events
+
 # Build native, cross-platform desktop apps
 
 Photino is a lightweight open-source framework for building native,  
