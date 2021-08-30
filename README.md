@@ -9,7 +9,7 @@ Most changes on this branch will be windows-focused.
 * Windows - Chromeless window shadow
 * Windows - Chromeless window Aero features (i.e. dragging the window to the top of the screen will maximize it)
 * Windows/Linux - Focus in/out events
-* Windows - Maximize, restore, and minimize events
+* Windows/Linux - Maximize, restore, and minimize events
 
 # Build native, cross-platform desktop apps
 
