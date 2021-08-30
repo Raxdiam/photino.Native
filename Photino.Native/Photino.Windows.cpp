@@ -37,6 +37,8 @@ namespace
 		basic_borderless = WS_POPUP | WS_THICKFRAME | WS_SYSMENU | WS_MAXIMIZEBOX | WS_MINIMIZEBOX
 	};
 
+	bool justRestored = false;
+
 	bool Maximized(HWND hwnd) {
 		WINDOWPLACEMENT placement;
 		if (!GetWindowPlacement(hwnd, &placement)) {
@@ -305,6 +307,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		}
 		break;
 	}
+	case WM_ERASEBKGND: 
+	{
+		return 1;
+	}
 	case WM_CLOSE:
 	{
 		Photino* Photino = hwndToPhotino[hwnd];
@@ -350,25 +356,32 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	}
 	case WM_SIZE:
 	{
-		Photino* Photino = hwndToPhotino[hwnd];
-		if (Photino)
-		{
-			Photino->RefitContent();
-			int width, height;
-			Photino->GetSize(&width, &height);
-			Photino->InvokeResize(width, height);
+		if (lParam != 0) {
+			Photino* Photino = hwndToPhotino[hwnd];
+			if (Photino)
+			{
+				Photino->RefitContent();
+				int width, height;
+				Photino->GetSize(&width, &height);
+				Photino->InvokeResize(width, height);
 
-			if (LOWORD(wParam) == SIZE_MAXIMIZED) {
-				Photino->InvokeMaximized();
-			}
-			else if (LOWORD(wParam) == SIZE_RESTORED) {
-				Photino->InvokeRestored();
-			}
-			else if (LOWORD(wParam) == SIZE_MINIMIZED) {
-				Photino->InvokeMinimized();
+				if (LOWORD(wParam) == SIZE_MAXIMIZED) {
+					Photino->InvokeMaximized();
+					justRestored = false;
+				}
+				else if (LOWORD(wParam) == SIZE_RESTORED) {
+					if (!justRestored) {
+						Photino->InvokeRestored();
+						justRestored = true;
+					}					
+				}
+				else if (LOWORD(wParam) == SIZE_MINIMIZED) {
+					Photino->InvokeMinimized();
+				}
 			}
 		}
-		return 0;
+		
+		break;
 	}
 	case WM_MOVE:
 	{
