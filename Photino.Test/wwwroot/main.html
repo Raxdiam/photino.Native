@@ -85,6 +85,10 @@
             window.external.sendMessage('showproperties');
         }
 
+        function SaveToLocalStorage() {
+            localStorage.setItem('testkey', 'test value');
+        }
+
         //Photo stuff
         //https://github.com/mdn/samples-server/tree/master/s/webrtc-capturestill
         (function () {
@@ -211,6 +215,8 @@
     <button onclick="SetFullScreen()">Kiosk</button>
     <br>
     <button onclick="ShowState()">Show State</button>
+    <br>
+    <button onclick="SaveToLocalStorage()">Save to Local Storage</button>
 
     <p>
         <div id="Lineage"></div>
