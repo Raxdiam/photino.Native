@@ -55,7 +55,8 @@ namespace
 
 		HMONITOR monitor = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONULL);
 		if (!monitor) {
-			return;
+			//return;
+			monitor = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
 		}
 
 		MONITORINFO monitorInfo{};
