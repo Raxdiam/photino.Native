@@ -8,11 +8,18 @@
 #include <windows.h>
 #include <cstdio>
 #include <algorithm>
+#include <windowsx.h>
+#include <dwmapi.h>
+
 #pragma comment(lib, "Urlmon.lib")
+#pragma comment(lib, "Dwmapi.lib")
 #pragma warning(disable: 4996)		//disable warning about wcscpy vs. wcscpy_s
 
 #define WM_USER_SHOWMESSAGE (WM_USER + 0x0001)
 #define WM_USER_INVOKE (WM_USER + 0x0002)
+#define WS_WINDOWED WS_OVERLAPPEDWINDOW
+#define WS_CHROMELESS (WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_THICKFRAME | WS_CLIPCHILDREN)
+#define WS_FULLSCREEN WS_POPUP
 
 using namespace Microsoft::WRL;
 
@@ -41,11 +48,21 @@ void Photino::Register(HINSTANCE hInstance)
 	_hInstance = hInstance;
 
 	// Register the window class	
-	WNDCLASSW wc = { };
-	wc.lpfnWndProc = WindowProc;
-	wc.hInstance = hInstance;
-	wc.lpszClassName = CLASS_NAME;
-	RegisterClass(&wc);
+	WNDCLASSEX wcx;
+	wcx.cbSize = sizeof WNDCLASSEX;
+	wcx.style = CS_HREDRAW | CS_VREDRAW;
+	wcx.lpfnWndProc = WindowProc;
+	wcx.cbClsExtra = 0;
+	wcx.cbWndExtra = 0;
+	wcx.hInstance = hInstance;
+	wcx.hIcon = LoadIcon(hInstance, IDI_APPLICATION);
+	wcx.hCursor = LoadCursor(nullptr, IDC_ARROW);
+	wcx.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+	wcx.lpszMenuName = nullptr;
+	wcx.lpszClassName = CLASS_NAME;
+	wcx.hIconSm = LoadIcon(hInstance, IDI_APPLICATION);
+
+	RegisterClassEx(&wcx);
 
 	SetThreadDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE);
 }
@@ -99,6 +116,7 @@ Photino::Photino(PhotinoInitParams* initParams)
 	_contextMenuEnabled = initParams->ContextMenuEnabled;
 	_devToolsEnabled = initParams->DevToolsEnabled;
 	_grantBrowserPermissions = initParams->GrantBrowserPermissions;
+	_chromeless = initParams->Chromeless;
 
 	_zoom = initParams->Zoom;
 
@@ -159,16 +177,16 @@ Photino::Photino(PhotinoInitParams* initParams)
 
 	//Create the window
 	_hWnd = CreateWindowEx(
-		0,                      //Optional window styles.
+		WS_EX_OVERLAPPEDWINDOW, //An optional extended window style.
 		CLASS_NAME,             //Window class
-		initParams->Title,		//Window text
-		initParams->Chromeless || initParams->FullScreen ? WS_POPUP : WS_OVERLAPPEDWINDOW,	//Window style
+		initParams->Title,      //Window title
+		initParams->Chromeless ? WS_CHROMELESS : initParams->FullScreen ? WS_FULLSCREEN : WS_WINDOWED, //Window style
 
 		// Size and position
 		initParams->Left, initParams->Top, initParams->Width, initParams->Height,
 
-		NULL,		//initParams.ParentHandle == nullptr ? initParams.ParentHandle : NULL,   //Parent window handle
-		NULL,       //Menu
+		nullptr,    //Parent window handle
+		nullptr,    //Menu
 		_hInstance, //Instance handle
 		this        //Additional application data
 	);
@@ -193,6 +211,8 @@ Photino::Photino(PhotinoInitParams* initParams)
 		SetTopmost(true);
 
 	Photino::Show();
+
+	Photino::SetChromeless(initParams->Chromeless);
 }
 
 Photino::~Photino() 
@@ -212,6 +232,25 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg)
 	{
+	case WM_NCCALCSIZE:
+	{
+		Photino* Photino = hwndToPhotino[hwnd];
+		if (Photino && Photino->_chromeless)
+		{
+			NCCALCSIZE_PARAMS* const parameters = reinterpret_cast<NCCALCSIZE_PARAMS*>(lParam);
+
+			if (IsMaximized(hwnd)) {
+				MONITORINFO info = MONITORINFO{};
+				info.cbSize = sizeof(MONITORINFO);
+				GetMonitorInfo(MonitorFromRect(parameters->rgrc, MONITOR_DEFAULTTONEAREST), &info);
+
+				parameters->rgrc[0] = info.rcWork;
+			}
+
+			return 0;
+		}
+		break;
+	}
 	case WM_ACTIVATE:
 	{
 		Photino* Photino = hwndToPhotino[hwnd];
@@ -299,7 +338,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		}
 		return 0;
 	}
-	break;
 	}
 
 	return DefWindowProc(hwnd, uMsg, wParam, lParam);
@@ -354,7 +392,10 @@ void Photino::GetDevToolsEnabled(bool* enabled)
 void Photino::GetFullScreen(bool* fullScreen)
 {
 	LONG lStyles = GetWindowLong(_hWnd, GWL_STYLE);
-	if (lStyles & WS_POPUP) *fullScreen = true;
+	LONG chromelessPart = WS_CHROMELESS;
+	chromelessPart &= ~WS_POPUP;
+	if (lStyles & chromelessPart) *fullScreen = false;
+	else if (lStyles & WS_POPUP) *fullScreen = true;
 }
 
 void Photino::GetGrantBrowserPermissions(bool* grant)
@@ -469,15 +510,16 @@ void Photino::SetFullScreen(bool fullScreen)
 	LONG_PTR style = GetWindowLongPtr(_hWnd, GWL_STYLE);
 	if (fullScreen)
 	{
-		style |= WS_POPUP;
-		style &= (~WS_OVERLAPPEDWINDOW);
+		style &= _chromeless ? ~WS_CHROMELESS : ~WS_WINDOWED;
+		style |= WS_FULLSCREEN;
 		SetPosition(0, 0);
 		SetSize(GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
 	}
 	else
 	{
-		style |= WS_OVERLAPPEDWINDOW;
-		style &= (~WS_POPUP);
+		style |= _chromeless ? WS_CHROMELESS : WS_WINDOWED;
+		if (!_chromeless) style &= ~WS_POPUP;
+		else SetChromeless(true);
 	}
 	SetWindowLongPtr(_hWnd, GWL_STYLE, style);
 }
@@ -566,6 +608,15 @@ void Photino::SetZoom(int zoom)
 
 
 
+void Photino::BeginHitTest(WPARAM wParam)
+{
+	ReleaseCapture();
+	SendMessage(_hWnd, WM_NCLBUTTONDOWN, wParam, 0);
+}
+
+
+
+
 void Photino::ShowMessage(AutoString title, AutoString body, UINT type)
 {
 	ShowMessageParams* params = new ShowMessageParams;
@@ -636,6 +687,22 @@ void Photino::Invoke(ACTION callback)
 
 
 //private methods
+void Photino::SetChromeless(bool chromeless)
+{
+	SetWindowLongPtr(_hWnd, GWL_STYLE, chromeless ? WS_CHROMELESS : WS_WINDOWED);
+
+	SetShadow(chromeless);
+	SetWindowPos(_hWnd, 0, 0, 0, 0, 0, SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE);
+	ShowWindow(_hWnd, SW_SHOW);
+}
+
+void Photino::SetShadow(bool shadow)
+{
+	const MARGINS shadowOn = { 1, 1, 1, 1 };
+	const MARGINS shadowOff = { 0, 0, 0, 0 };
+	DwmExtendFrameIntoClientArea(_hWnd, shadow ? &shadowOn : &shadowOff);
+}
+
 
 void Photino::AttachWebView()
 {
@@ -815,7 +882,7 @@ void Photino::RefitContent()
 
 void Photino::Show()
 {
-	ShowWindow(_hWnd, SW_SHOWDEFAULT);
+	ShowWindow(_hWnd, SW_SHOW);
 
 	// Strangely, it only works to create the webview2 *after* the window has been shown,
 	// so defer it until here. This unfortunately means you can't call the Navigate methods
