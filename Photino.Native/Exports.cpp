@@ -195,6 +195,11 @@ extern "C"
 		instance->SetZoom(zoom);
 	}
 
+	EXPORTED void Photino_BeginHitTest(Photino* instance, int hitTest)
+	{
+		instance->BeginHitTest(hitTest);
+	}
+
 	EXPORTED void Photino_ShowMessage(Photino* instance, AutoString title, AutoString body, unsigned int type)
 	{
 		instance->ShowMessage(title, body, type);

@@ -85,6 +85,20 @@
             window.external.sendMessage('showproperties');
         }
 
+        //Drag stuff
+        (function() {
+            function setup() {
+                let dragHandle = document.getElementById('drag');
+
+                dragHandle.addEventListener('mousedown', function (ev) {
+                    window.external.sendMessage('drag');
+                    ev.preventDefault();
+                    ev.stopPropagation();
+                });
+            }
+
+            window.addEventListener('load', setup, false);
+        })();
 
         //Photo stuff
         //https://github.com/mdn/samples-server/tree/master/s/webrtc-capturestill
@@ -165,6 +179,8 @@
 <body>
     <h1 id="Title"></h1>
 
+    <div id="drag" style="width: 100%; height: 30px; background: gray;"></div>
+    <br>
     <button onclick="OpenChildWindow()">Open Child Window</button>
     <button onclick="ZoomIn()">Zoom In</button>
     <button onclick="ZoomOut()">Zoom Out</button>

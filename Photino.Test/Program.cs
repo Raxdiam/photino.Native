@@ -103,7 +103,7 @@ namespace PhotinoNET
                 //StartString = "<h1>Hello Photino!</h1>",
 
                 //Centered = true,
-                //Chromeless = true,
+                Chromeless = true,
                 //FullScreen = true,
                 //Maximized = true,
                 //Minimized = true,
@@ -305,6 +305,10 @@ namespace PhotinoNET
             {
                 var properties = GetPropertiesDisplay(currentWindow);
                 currentWindow.OpenAlertWindow("Settings", properties);
+            }
+            else if (string.Compare(message, "drag", true) == 0)
+            {
+                currentWindow.BeginHitTest(PhotinoHitTest.Drag);
             }
             else
                 throw new Exception($"Unknown message '{message}'");

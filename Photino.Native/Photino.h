@@ -109,6 +109,9 @@ private:
 	bool EnsureWebViewIsInstalled();
 	bool InstallWebView2();
 	void AttachWebView();
+
+	void SetChromeless(bool chromeless);
+	void SetShadow(bool shadow);
 #elif __linux__
 	//GtkWidget* _window;
 	GtkWidget* _webview;
@@ -130,9 +133,12 @@ public:
 	bool _grantBrowserPermissions;
 
 #ifdef _WIN32
+	bool _chromeless;
 	static void Register(HINSTANCE hInstance);
 	HWND getHwnd();
 	void RefitContent();
+
+	void BeginHitTest(WPARAM wParam);
 #elif __linux__
 	GtkWidget* _window;
 	int _lastHeight;
