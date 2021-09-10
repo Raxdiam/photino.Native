@@ -2,14 +2,14 @@
 #include <mutex>
 #include <condition_variable>
 #include <comdef.h>
-#include <atomic>
 #include <Shlwapi.h>
 #include <wrl.h>
 #include <windows.h>
-#include <cstdio>
 #include <algorithm>
 #include <windowsx.h>
 #include <dwmapi.h>
+
+#include "Photino.Windows.DarkMode.h"
 
 #pragma comment(lib, "Urlmon.lib")
 #pragma comment(lib, "Dwmapi.lib")
@@ -20,6 +20,7 @@
 #define WS_WINDOWED WS_OVERLAPPEDWINDOW
 #define WS_CHROMELESS (WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_THICKFRAME | WS_CLIPCHILDREN)
 #define WS_FULLSCREEN WS_POPUP
+
 
 using namespace Microsoft::WRL;
 
@@ -45,6 +46,8 @@ struct ShowMessageParams
 
 void Photino::Register(HINSTANCE hInstance)
 {
+	InitDarkModeSupport();
+
 	_hInstance = hInstance;
 
 	// Register the window class	
@@ -260,6 +263,27 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		else {
 			Photino->InvokeFocusIn();
 		}
+		break;
+	}
+	case WM_CREATE: 
+	{
+		EnableDarkMode(hwnd, true);
+		if (IsDarkModeEnabled()) 
+		{
+			RefreshNonClientArea(hwnd);
+		}
+		break;
+	}
+	case WM_SETTINGCHANGE: 
+	{
+		if (IsColorSchemeChange(lParam))
+			SendMessageW(hwnd, WM_THEMECHANGED, 0, 0);
+		break;
+	}
+	case WM_THEMECHANGED:
+	{
+		EnableDarkMode(hwnd, IsDarkModeEnabled());
+		RefreshNonClientArea(hwnd);
 		break;
 	}
 	case WM_CLOSE:
@@ -883,6 +907,7 @@ void Photino::RefitContent()
 void Photino::Show()
 {
 	ShowWindow(_hWnd, SW_SHOW);
+	UpdateWindow(_hWnd);
 
 	// Strangely, it only works to create the webview2 *after* the window has been shown,
 	// so defer it until here. This unfortunately means you can't call the Navigate methods
