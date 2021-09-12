@@ -195,10 +195,12 @@ extern "C"
 		instance->SetZoom(zoom);
 	}
 
+#ifdef _WIN32
 	EXPORTED void Photino_BeginHitTest(Photino* instance, int hitTest)
 	{
 		instance->BeginHitTest(hitTest);
 	}
+#endif
 
 	EXPORTED void Photino_ShowMessage(Photino* instance, AutoString title, AutoString body, unsigned int type)
 	{
