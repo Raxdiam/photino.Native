@@ -101,8 +101,9 @@ namespace PhotinoNET
                 IconFile = iconFile,
                 Title = $"My Photino Window {_windowNumber++}",
 
-                StartUrl = "wwwroot/main.html",
-                //StartString = "<h1>Hello Photino!</h1>",
+                //StartUrl = "wwwroot/main.html",
+                //StartUrl = "https://google.com/",
+                StartString = "<h1>Hello Photino!</h1>",
 
                 //Centered = true,
                 //Chromeless = true,
@@ -313,12 +314,27 @@ namespace PhotinoNET
                 var properties = GetPropertiesDisplay(currentWindow);
                 currentWindow.OpenAlertWindow("Settings", properties);
             }
-            else if (string.Compare(message, "drag", true) == 0)
+            /*else if (string.Compare(message, "drag", true) == 0)
             {
                 currentWindow.BeginHitTest(PhotinoHitTest.Drag);
+            }*/
+            else {
+                switch (message) {
+                    case "drag": currentWindow.BeginHitTest(PhotinoHitTest.Drag); break;
+                    case "resizeTop": currentWindow.BeginHitTest(PhotinoHitTest.ResizeTop); break;
+                    case "resizeRight": currentWindow.BeginHitTest(PhotinoHitTest.ResizeRight); break;
+                    case "resizeBottom": currentWindow.BeginHitTest(PhotinoHitTest.ResizeBottom); break;
+                    case "resizeLeft": currentWindow.BeginHitTest(PhotinoHitTest.ResizeLeft); break;
+                    case "resizeTopLeft": currentWindow.BeginHitTest(PhotinoHitTest.ResizeTopLeft); break;
+                    case "resizeTopRight": currentWindow.BeginHitTest(PhotinoHitTest.ResizeTopRight); break;
+                    case "resizeBottomRight": currentWindow.BeginHitTest(PhotinoHitTest.ResizeBottomRight); break;
+                    case "resizeBottomLeft": currentWindow.BeginHitTest(PhotinoHitTest.ResizeBottomLeft); break;
+                    default:
+                        throw new Exception($"Unknown message '{message}'");
+                }
             }
-            else
-                throw new Exception($"Unknown message '{message}'");
+
+            
         }
 
         private static void WindowCreating(object sender, EventArgs e)
