@@ -87,14 +87,37 @@
 
         //Drag stuff
         (function() {
+            function hitTest(ev) {
+                const el = ev.target;
+                window.external.sendMessage(el.id);
+                ev.preventDefault();
+                ev.stopPropagation();
+            }
+
             function setup() {
-                let dragHandle = document.getElementById('drag');
+                const handles = [
+                    document.getElementById('drag'),
+                    document.getElementById('resizeTop'),
+                    document.getElementById('resizeRight'),
+                    document.getElementById('resizeBottom'),
+                    document.getElementById('resizeLeft'),
+                    document.getElementById('resizeTopLeft'),
+                    document.getElementById('resizeTopRight'),
+                    document.getElementById('resizeBottomRight'),
+                    document.getElementById('resizeBottomLeft'),
+                ];
+
+                for (const handle of handles) {
+                    handle.addEventListener('mousedown', hitTest);
+                }
+
+                /* let dragHandle = document.getElementById('drag');
 
                 dragHandle.addEventListener('mousedown', function (ev) {
                     window.external.sendMessage('drag');
                     ev.preventDefault();
                     ev.stopPropagation();
-                });
+                }); */
             }
 
             window.addEventListener('load', setup, false);
@@ -178,8 +201,18 @@
 </head>
 <body>
     <h1 id="Title"></h1>
-
     <div id="drag" style="width: 100%; height: 30px; background: gray;"></div>
+    <br>
+    <div style="display: flex; flex-direction: row; gap: 4px; color: white;">
+        <div id="resizeTop" style="width: 20px; height: 20px; background: gray; cursor: n-resize;">⭱</div>
+        <div id="resizeRight" style="width: 20px; height: 20px; background: gray; cursor: e-resize;">⇥</div>
+        <div id="resizeBottom" style="width: 20px; height: 20px; background: gray; cursor: s-resize;">⭳</div>
+        <div id="resizeLeft" style="width: 20px; height: 20px; background: gray; cursor: w-resize;">⇤</div>
+        <div id="resizeTopLeft" style="width: 20px; height: 20px; background: gray; cursor: nw-resize;">⭶</div>
+        <div id="resizeTopRight" style="width: 20px; height: 20px; background: gray; cursor: ne-resize;">⭷</div>
+        <div id="resizeBottomRight" style="width: 20px; height: 20px; background: gray; cursor: se-resize;">⭸</div>
+        <div id="resizeBottomLeft" style="width: 20px; height: 20px; background: gray; cursor: sw-resize;">⭹</div>
+    </div>    
     <br>
     <button onclick="OpenChildWindow()">Open Child Window</button>
     <button onclick="ZoomIn()">Zoom In</button>
