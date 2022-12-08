@@ -1,7 +1,7 @@
 #ifdef __APPLE__
-#import "Photino.Mac.UiDelegate.h"
+#import "Photino.Mac.WebViewDelegate.h"
 
-@implementation UiDelegate : NSObject
+@implementation WebViewDelegate : NSObject
 
 - (void)userContentController:(WKUserContentController *)userContentController didReceiveScriptMessage:(WKScriptMessage *)message
 {
@@ -73,32 +73,10 @@
     }];
 }
 
-- (void)windowDidResize:(NSNotification *)notification {
-    int width, height;
-    photino->GetSize(&width, &height);
-    photino->InvokeResize(width, height);
-}
-
-- (void)windowDidMove:(NSNotification *)notification {
-    int x, y;
-    photino->GetPosition(&x, &y);
-    photino->InvokeMove(x, y);
-}
-
-- (void)windowDidBecomeKey:(NSNotification *)notification {
-    photino->InvokeFocusIn();
-}
-
-- (void)windowDidResignKey:(NSNotification *)notification {
-    photino->InvokeFocusOut();
-}
-
-- (void)windowDidMiniaturize:(NSNotification *)notification {
-    photino->InvokeMinimized();
-}
-
-- (void)windowDidDeminiaturize:(NSNotification *)notification {
-    photino->InvokeRestored();
+- (void)webView:(WKWebView *)webView didFinishNavigation:(WKNavigation *)navigation {
+    if (!contextMenuEnabled) {
+        [webView evaluateJavaScript:@"document.body.setAttribute('oncontextmenu', 'event.preventDefault();');" completionHandler:nil];
+    }
 }
 
 @end

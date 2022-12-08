@@ -2,10 +2,10 @@
 #pragma once
 #include "Photino.h"
 
-@interface UiDelegate : NSObject <WKUIDelegate, WKScriptMessageHandler> {
+@interface WebViewDelegate : NSObject <WKUIDelegate, WKNavigationDelegate, WKScriptMessageHandler> {
     @public
     NSWindow * window;
-    Photino * photino;
+    BOOL contextMenuEnabled;
     WebMessageReceivedCallback webMessageReceivedCallback;
 }
 @end

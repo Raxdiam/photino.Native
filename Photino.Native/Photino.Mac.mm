@@ -1,7 +1,8 @@
 #ifdef __APPLE__
 #include "Photino.h"
 #include "Photino.Mac.AppDelegate.h"
-#include "Photino.Mac.UiDelegate.h"
+#include "Photino.Mac.WindowDelegate.h"
+#include "Photino.Mac.WebViewDelegate.h"
 #include "Photino.Mac.UrlSchemeHandler.h"
 #include "Photino.Mac.NSWindowBorderless.h"
 #include <vector>
@@ -73,7 +74,7 @@ Photino::Photino(PhotinoInitParams* initParams)
 		strcpy(_temporaryFilesPath, initParams->TemporaryFilesPath);
 	}
 
-	_contextMenuEnabled = true; //not configurable on mac //initParams->ContextMenuEnabled;
+	_contextMenuEnabled = initParams->ContextMenuEnabled;
 	_devToolsEnabled = initParams->DevToolsEnabled;
 	_grantBrowserPermissions = initParams->GrantBrowserPermissions;
 
@@ -624,29 +625,23 @@ void Photino::AttachWebView()
     [_window.contentView addSubview: _webview];
     [_window.contentView setAutoresizesSubviews: true];
 
-    UiDelegate *uiDelegate = [[[UiDelegate alloc] init] autorelease];
-    uiDelegate->photino = this;
-    uiDelegate->window = _window;
-    uiDelegate->webMessageReceivedCallback = _webMessageReceivedCallback;
+    WindowDelegate *windowDelegate = [[[WindowDelegate alloc] init] autorelease];
+    windowDelegate->photino = this;
+    windowDelegate->window = _window;
+
+    [_window setDelegate:(id<NSWindowDelegate> _Nullable)windowDelegate];
+
+    WebViewDelegate *webViewDelegate = [[[WebViewDelegate alloc] init] autorelease];
+    webViewDelegate->window = _window;
+    webViewDelegate->contextMenuEnabled = _contextMenuEnabled;
+    webViewDelegate->webMessageReceivedCallback = _webMessageReceivedCallback;
 
     [userContentController
-        addScriptMessageHandler: uiDelegate
+        addScriptMessageHandler: webViewDelegate
         name:@"photinointerop"];
 
-    _webview.UIDelegate = uiDelegate;
-
-    // TODO: Replace with WindowDelegate
-    [[NSNotificationCenter defaultCenter]
-        addObserver: uiDelegate
-        selector: @selector(windowDidResize:)
-        name: NSWindowDidResizeNotification
-        object: _window];
-    
-    [[NSNotificationCenter defaultCenter]
-        addObserver: uiDelegate
-        selector: @selector(windowDidMove:)
-        name: NSWindowDidMoveNotification
-        object: _window];
+    _webview.UIDelegate = webViewDelegate;
+    _webview.navigationDelegate = webViewDelegate;
 
     if (_startUrl != NULL)
         NavigateToUrl(_startUrl);
