@@ -285,8 +285,17 @@ void Photino::GetResizable(bool* resizable)
 
 unsigned int Photino::GetScreenDpi()
 {
+    // Not sure how accurate this is.
+    // There's a possibility things can get kind of wonky when things are scaled in the settings.
+    // May not get the correct values for physical display size in pixels.
+    NSScreen *screen = [NSScreen mainScreen];
+    NSDictionary *description = [screen deviceDescription];
+    NSSize displayPixelSize = [[description objectForKey:NSDeviceSize] sizeValue];
+    CGSize displayPhysicalSize = CGDisplayScreenSize([[description objectForKey:@"NSScreenNumber"] unsignedIntValue]);
+
+    return (unsigned int)roundf(displayPixelSize.width / displayPhysicalSize.width * 25.4);
     //not supported on macOS - _window's devices collection does have dpi
-	return 72;  //https://stackoverflow.com/questions/2621439/hot-to-get-screen-dpi-linux-mac-programaticaly
+	//return 72;  //https://stackoverflow.com/questions/2621439/hot-to-get-screen-dpi-linux-mac-programaticaly
 }
 
 void Photino::GetSize(int* width, int* height)
