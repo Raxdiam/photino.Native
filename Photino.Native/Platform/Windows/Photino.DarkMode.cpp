@@ -1,4 +1,4 @@
-#include "Photino.Windows.DarkMode.h"
+#include "Photino.DarkMode.h"
 
 #include <mutex>
 

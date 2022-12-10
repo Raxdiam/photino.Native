@@ -1,11 +1,11 @@
 #pragma once
+#include "Monitor.h"
 
 #ifdef _WIN32
 #include <Windows.h>
 #include <wil/com.h>
 #include <WebView2.h>
 typedef wchar_t *AutoString;
-class WinToastHandler;
 #else
 // AutoString for macOS/Linux
 typedef char *AutoString;
@@ -23,18 +23,7 @@ typedef char *AutoString;
 #include <gtk/gtk.h>
 #endif
 
-#include <map>
-#include <string>
 #include <vector>
-
-struct Monitor
-{
-	struct MonitorRect
-	{
-		int x, y;
-		int width, height;
-	} monitor, work;
-};
 
 typedef void (*ACTION)();
 typedef void (*WebMessageReceivedCallback)(AutoString message);
@@ -103,7 +92,6 @@ struct PhotinoInitParams
 
 class Photino
 {
-private:
 	WebMessageReceivedCallback _webMessageReceivedCallback;
 	MovedCallback _movedCallback;
 	ResizedCallback _resizedCallback;
@@ -120,7 +108,7 @@ private:
 	AutoString _startString;
 	AutoString _temporaryFilesPath;
 	AutoString _windowTitle;
-	AutoString _iconFileName;
+	AutoString _iconFileName{};
 
 	int _zoom;
 
@@ -129,7 +117,6 @@ private:
 #ifdef _WIN32
 	static HINSTANCE _hInstance;
 	HWND _hWnd;
-	WinToastHandler *_toastHandler;
 	wil::com_ptr<ICoreWebView2Environment> _webviewEnvironment;
 	wil::com_ptr<ICoreWebView2> _webviewWindow;
 	wil::com_ptr<ICoreWebView2Controller> _webviewController;

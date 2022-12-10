@@ -15,59 +15,29 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Exports.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Photino.Windows.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Photino.Linux.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Dependencies\wintoastlib.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Photino.Windows.DarkMode.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
     <None Include="packages.config" />
     <None Include="Photino.Native.nuspec" />
-    <None Include="Photino.Mac.AppDelegate.mm">
-      <Filter>Source Files</Filter>
-    </None>
-    <None Include="Photino.Mac.mm">
-      <Filter>Source Files</Filter>
-    </None>
-    <None Include="Photino.Mac.UiDelegate.mm">
-      <Filter>Source Files</Filter>
-    </None>
-    <None Include="Photino.Mac.UrlSchemeHandler.mm">
-      <Filter>Source Files</Filter>
-    </None>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Photino.h">
+    <ClCompile Include="Platform\Windows\Photino.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Platform\Windows\Photino.DarkMode.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Shared\Exports.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Platform\Windows\Photino.DarkMode.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Photino.Mac.AppDelegate.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Photino.Mac.UiDelegate.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Photino.Mac.UrlSchemeHandler.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Photino.Windows.ToastHandler.h">
+    <ClInclude Include="Shared\Photino.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Dependencies\wintoastlib.h">
+    <ClInclude Include="Shared\Monitor.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Photino.Windows.DarkMode.h">
-      <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
