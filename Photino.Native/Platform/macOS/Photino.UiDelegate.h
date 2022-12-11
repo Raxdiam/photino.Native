@@ -1,6 +1,6 @@
 #ifdef __APPLE__
 #pragma once
-#include "Photino.h"
+#include "../../Shared/Photino.h"
 
 @interface UiDelegate : NSObject <WKUIDelegate, WKScriptMessageHandler> {
     @public

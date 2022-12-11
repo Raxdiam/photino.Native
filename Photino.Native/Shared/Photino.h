@@ -108,7 +108,7 @@ class Photino
 	AutoString _startString;
 	AutoString _temporaryFilesPath;
 	AutoString _windowTitle;
-	AutoString _iconFileName{};
+	AutoString _iconFileName;
 
 	int _zoom;
 

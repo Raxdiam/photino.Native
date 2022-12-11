@@ -1,5 +1,5 @@
 #ifdef __APPLE__
-#import "Photino.Mac.AppDelegate.h"
+#import "Photino.AppDelegate.h"
 #import <objc/runtime.h>
 
 @implementation AppDelegate : NSObject

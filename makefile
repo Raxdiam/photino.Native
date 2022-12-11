@@ -4,9 +4,9 @@ CFLAGS=-std=c++2a -Wall -O2 -shared -fPIC
 
 SRC=./Photino.Native
 SRC_SHARED=$(SRC)/Shared
-SRC_WIN=$(SRC)/Windows
-SRC_MAC=$(SRC)/macOS
-SRC_LIN=$(SRC)/Linux
+SRC_WIN=$(SRC)/Platform/Windows
+SRC_MAC=$(SRC)/Platform/macOS
+SRC_LIN=$(SRC)/Platform/Linux
 
 DEST_PATH=./lib
 
@@ -35,19 +35,20 @@ build-photino-mac:
 	# "build-photino-mac is not defined"
 
 build-photino-mac-dev:
-	cp $(SRC)/Exports.cpp $(SRC)/Exports.mm &&\
+	cp $(SRC_SHARED)/Exports.cpp $(SRC_SHARED)/Exports.mm &&\
 	$(CC) -o $(DEST_PATH_DEV)/$(DEST_FILE).dylib\
 		  $(CFLAGS)\
 		  -framework Cocoa\
 		  -framework WebKit\
 		  -framework UserNotifications\
-		  $(SRC)/Photino.Mac.AppDelegate.mm\
-		  $(SRC)/Photino.Mac.UiDelegate.mm\
-		  $(SRC)/Photino.Mac.UrlSchemeHandler.mm\
-		  $(SRC)/Photino.Mac.NSWindowBorderless.mm\
-		  $(SRC)/Photino.Mac.mm\
-		  $(SRC)/Exports.mm &&\
-	rm $(SRC)/Exports.mm
+		  $(SRC_MAC)/Photino.AppDelegate.mm\
+		  $(SRC_MAC)/Photino.UiDelegate.mm\
+		  $(SRC_MAC)/Photino.UrlSchemeHandler.mm\
+		  $(SRC_MAC)/Photino.NSWindowBorderless.mm\
+		  $(SRC_MAC)/Photino.mm\
+		  $(SRC_SHARED)/Exports.mm &&\
+	rm $(SRC_SHARED)/Exports.mm &&\
+	cp $(DEST_PATH_DEV)/$(DEST_FILE).dylib ./Photino.Test/bin/Debug/net6.0/
 
 install-linux-dependencies:
 	sudo apt-get update\
@@ -59,9 +60,10 @@ build-photino-linux:
 build-photino-linux-dev:
 	$(CC) -o $(DEST_PATH_DEV)/$(DEST_FILE).so\
 		  $(CFLAGS)\
-		  $(SRC)/Photino.Linux.cpp\
-		  $(SRC)/Exports.cpp\
-		  `pkg-config --cflags --libs gtk+-3.0 webkit2gtk-4.0 libnotify`
+		  $(SRC_LIN)/Photino.cpp\
+		  $(SRC_SHARED)/Exports.cpp\
+		  `pkg-config --cflags --libs gtk+-3.0 webkit2gtk-4.0 libnotify` &&\
+	cp $(DEST_PATH_DEV)/$(DEST_FILE).so ./Photino.Test/bin/Debug/net6.0/
 
 clean:
 	rm -rf $(DEST_PATH_PROD)/* & mkdir -p $(DEST_PATH_PROD)
