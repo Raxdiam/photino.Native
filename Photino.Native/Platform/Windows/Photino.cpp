@@ -12,7 +12,6 @@
 #include "Photino.DarkMode.h"
 
 #pragma comment(lib, "Urlmon.lib")
-//#pragma warning(disable: 4996)		//disable warning about wcscpy vs. wcscpy_s
 
 #define WM_USER_SHOWMESSAGE (WM_USER + 0x0001)
 #define WM_USER_INVOKE (WM_USER + 0x0002)
@@ -87,7 +86,7 @@ Photino::Photino(PhotinoInitParams* initParams)
 
 	if (initParams->TitleWide != nullptr)
 	{
-		wcscpy_s(_windowTitle, sizeof _windowTitle, initParams->TitleWide);
+		wcscpy_s(_windowTitle, wcslen(_windowTitle), initParams->TitleWide);
 	}
 	else
 		_windowTitle[0] = 0;
@@ -97,7 +96,7 @@ Photino::Photino(PhotinoInitParams* initParams)
 	{
 		_startUrl = new wchar_t[2048];
 		if (_startUrl == nullptr) exit(0);
-		wcscpy_s(_startUrl, sizeof _startUrl, initParams->StartUrlWide);
+		wcscpy_s(_startUrl, wcslen(_startUrl), initParams->StartUrlWide);
 	}
 
 	_startString = nullptr;
@@ -105,7 +104,7 @@ Photino::Photino(PhotinoInitParams* initParams)
 	{
 		_startString = new wchar_t[wcslen(initParams->StartStringWide) + 1];
 		if (_startString == nullptr) exit(0);
-		wcscpy_s(_startString, sizeof _startString, initParams->StartStringWide);
+		wcscpy_s(_startString, wcslen(_startString), initParams->StartStringWide);
 	}
 
 	_temporaryFilesPath = nullptr;
@@ -113,7 +112,7 @@ Photino::Photino(PhotinoInitParams* initParams)
 	{
 		_temporaryFilesPath = new wchar_t[256];
 		if (_temporaryFilesPath == nullptr) exit(0);
-		wcscpy_s(_temporaryFilesPath, sizeof _temporaryFilesPath, initParams->TemporaryFilesPathWide);
+		wcscpy_s(_temporaryFilesPath, wcslen(_temporaryFilesPath), initParams->TemporaryFilesPathWide);
 
 	}
 
@@ -140,7 +139,7 @@ Photino::Photino(PhotinoInitParams* initParams)
 		if (i != nullptr)
 		{
 			auto name = new wchar_t[50];
-			wcscpy_s(name, sizeof name, i);
+			wcscpy_s(name, wcslen(name), i);
 			_customSchemeNames.push_back(name);
 		}
 	}
@@ -604,7 +603,7 @@ void Photino::SetTitle(AutoString title)
 		_windowTitle[255] = 0;
 	}
 	else
-		wcscpy_s(_windowTitle, sizeof _windowTitle, title);
+		wcscpy_s(_windowTitle, wcslen(_windowTitle), title);
 	SetWindowText(_hWnd, title);
 }
 
