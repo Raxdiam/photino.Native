@@ -220,6 +220,31 @@ void Photino::Center()
     //[_window setFrame: NSMakeRect(xPos, yPos, NSWidth(window), NSHeight(window)) display:YES];
 }
 
+void Photino::DragMove()
+{
+    NSPoint mouseLocation = [NSEvent mouseLocation];
+    NSRect rc = NSMakeRect(mouseLocation.x, mouseLocation.y, 1, 1);
+    rc = [_window convertRectFromScreen: rc];
+    
+    NSEvent* event = [NSEvent
+        mouseEventWithType: NSEventTypeLeftMouseDown
+        location: rc.origin
+        modifierFlags: 0
+        timestamp: 0
+        windowNumber: [_window windowNumber]
+        context: nil
+        eventNumber: 0
+        clickCount: 1
+        pressure: 1.0
+    ];
+
+    [_window performWindowDragWithEvent: event];
+}
+
+void Photino::DragResize(int edge)
+{
+}
+
 void Photino::ClearBrowserAutoFill()
 {
     //TODO
