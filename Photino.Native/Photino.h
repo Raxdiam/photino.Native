@@ -177,6 +177,8 @@ public:
 	~Photino();
 
 	void Center();
+	void DragMove();
+	void DragResize(int edge);
 	void ClearBrowserAutoFill();
 	void Close();
 

@@ -45,6 +45,16 @@ extern "C"
 		instance->Center();
 	}
 
+	EXPORTED void Photino_DragMove(Photino* instance)
+	{
+		instance->DragMove();
+	}
+
+	EXPORTED void Photino_DragResize(Photino* instance, int edge)
+	{
+		instance->DragResize(edge);
+	}
+
 	EXPORTED void Photino_ClearBrowserAutoFill(Photino* instance)
 	{
 		instance->ClearBrowserAutoFill();
