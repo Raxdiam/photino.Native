@@ -107,14 +107,18 @@
             var canvas = null;
             var photo = null;
             var startbutton = null;
+            var dragHandle = null;
+            var resizeHandles = null;
 
             function startup() {
                 video = document.getElementById('video');
                 canvas = document.getElementById('canvas');
                 photo = document.getElementById('photo');
                 startbutton = document.getElementById('startbutton');
+                dragHandle = document.querySelector('.drag');
+                resizeHandles = document.querySelectorAll('.drag-resize');
 
-                navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+                navigator?.mediaDevices?.getUserMedia({ video: true, audio: false })
                     .then(function (stream) {
                         video.srcObject = stream;
                         video.play();
@@ -142,6 +146,22 @@
                     takepicture();
                     ev.preventDefault();
                 }, false);
+
+                console.log('it gets this far')
+                dragHandle.addEventListener('mousedown', function (ev) {
+                    console.log('hey')
+                    ev.preventDefault();
+                    ev.stopPropagation();
+                    window.external.sendMessage('dragmove');
+                });
+
+                resizeHandles.forEach(function (handle) {
+                    handle.addEventListener('mousedown', function (ev) {
+                        ev.preventDefault();
+                        ev.stopPropagation();
+                        window.external.sendMessage(`dragresize-${handle.classList[2]}`);
+                    });
+                });
 
                 clearphoto();
             }
@@ -172,10 +192,37 @@
             window.addEventListener('load', startup, false);
         })();
     </script>
+
+    <style>
+        .drag {
+            background-color: gray;
+            color: #fff;
+            text-align: center;
+            height: 32px;
+            line-height: 32px;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        .drag-resize {
+            display: inline-block;
+            width: 32px;
+        }
+    </style>
 </head>
 <body>
     <h1 id="Title"></h1>
 
+    <div class="drag">Drag Me</div>
+    <br>
+    <div class="drag drag-resize left" style="cursor: w-resize;">←</div>
+    <div class="drag drag-resize topleft" style="cursor: nw-resize;">↖</div>
+    <div class="drag drag-resize top" style="cursor: n-resize;">↑</div>
+    <div class="drag drag-resize topright" style="cursor: ne-resize;">↗</div>
+    <div class="drag drag-resize right" style="cursor: e-resize;">→</div>
+    <div class="drag drag-resize bottomright" style="cursor: se-resize;">↘</div>
+    <div class="drag drag-resize bottom" style="cursor: s-resize;">↓</div>
+    <div class="drag drag-resize bottomleft" style="cursor: sw-resize;">↙</div>
+    <br><br>
     <button onclick="OpenChildWindow()">Open Child Window</button>
     <button onclick="ZoomIn()">Zoom In</button>
     <button onclick="ZoomOut()">Zoom Out</button>

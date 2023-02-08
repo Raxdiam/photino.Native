@@ -324,6 +324,26 @@ namespace PhotinoNET
             {
                 currentWindow.SendNotification("Toast Title", " Taoast message!");
             }
+            else if (string.Compare(message, "dragmove", true) == 0)
+            {
+                currentWindow.DragMove();
+            }
+            else if (message.StartsWith("dragresize-"))
+            {
+                var edgeStr = message.Split('-')[1];
+                var edge = edgeStr switch {
+                    "left" => PhotinoResizeEdge.Left,
+                    "topleft" => PhotinoResizeEdge.TopLeft,
+                    "top" => PhotinoResizeEdge.Top,
+                    "topright" => PhotinoResizeEdge.TopRight,
+                    "right" => PhotinoResizeEdge.Right,
+                    "bottomright" => PhotinoResizeEdge.BottomRight,
+                    "bottom" => PhotinoResizeEdge.Bottom,
+                    "bottomleft" => PhotinoResizeEdge.BottomLeft,
+                    _ => throw new Exception($"Unknown edge '{edgeStr}'")
+                };
+                currentWindow.DragResize(edge);
+            }
             else
                 throw new Exception($"Unknown message '{message}'");
         }
