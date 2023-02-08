@@ -392,6 +392,31 @@ void Photino::Center()
 	SetPosition(left, top);
 }
 
+void Photino::DragMove()
+{
+	ReleaseCapture();
+	SendMessage(_hWnd, WM_NCLBUTTONDOWN, HTCAPTION, 0);
+}
+
+void Photino::DragResize(int edge)
+{
+	ReleaseCapture();
+	int ht;
+	switch (edge)
+	{
+	case 0: ht = HTLEFT; break;
+	case 1: ht = HTTOPLEFT; break;
+	case 2: ht = HTTOP; break;
+	case 3: ht = HTTOPRIGHT; break;
+	case 4: ht = HTRIGHT; break;
+	case 5: ht = HTBOTTOMRIGHT; break;
+	case 6: ht = HTBOTTOM; break;
+	case 7: ht = HTBOTTOMLEFT; break;
+	default: ht = HTCLIENT; break;
+	}
+	SendMessage(_hWnd, WM_NCLBUTTONDOWN, ht, 0);
+}
+
 void Photino::Close()
 {
 	PostMessage(_hWnd, WM_CLOSE, NULL, NULL);
