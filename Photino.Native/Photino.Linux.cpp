@@ -248,6 +248,37 @@ void Photino::Center()
 		(screen.height - windowHeight) / 2);
 }
 
+void Photino::DragMove()
+{
+	int x, y;
+	GdkDisplay* display = gdk_display_get_default();
+	GdkDevice* device = gdk_seat_get_pointer(gdk_display_get_default_seat(display));
+	gdk_device_get_position(device, NULL, &x, &y);
+	gtk_window_begin_move_drag(GTK_WINDOW(_window), 1, x, y, 0);
+}
+
+void Photino::DragResize(int edge)
+{
+	auto gdkEdge = (GdkWindowEdge) -1;
+	switch (edge) {
+	case 0: gdkEdge = GDK_WINDOW_EDGE_WEST; break;
+	case 1: gdkEdge = GDK_WINDOW_EDGE_NORTH_WEST; break;
+	case 2: gdkEdge = GDK_WINDOW_EDGE_NORTH; break;
+	case 3: gdkEdge = GDK_WINDOW_EDGE_NORTH_EAST; break;
+	case 4: gdkEdge = GDK_WINDOW_EDGE_EAST; break;
+	case 5: gdkEdge = GDK_WINDOW_EDGE_SOUTH_EAST; break;
+	case 6: gdkEdge = GDK_WINDOW_EDGE_SOUTH; break;
+	case 7: gdkEdge = GDK_WINDOW_EDGE_SOUTH_WEST; break;
+	}
+	if (gdkEdge == -1) return;
+
+	int x, y;
+	GdkDisplay* display = gdk_display_get_default();
+	GdkDevice* device = gdk_seat_get_pointer(gdk_display_get_default_seat(display));
+	gdk_device_get_position(device, nullptr, &x, &y);
+	gtk_window_begin_resize_drag(GTK_WINDOW(_window), gdkEdge, 1, x, y, 0);
+}
+
 void Photino::ClearBrowserAutoFill()
 {
 	//TODO
