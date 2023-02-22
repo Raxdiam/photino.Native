@@ -39,6 +39,7 @@
 
   <ItemGroup>
 	<Compile Include="..\..\photino.NET\Photino.NET\PhotinoDialogEnums.cs" Link="PhotinoDialogEnums.cs" />
+	<Compile Include="..\..\photino.NET\Photino.NET\PhotinoDialogs.cs" Link="PhotinoDialogs.cs" />
 	<Compile Include="..\..\photino.NET\Photino.NET\PhotinoDllImports.cs" Link="PhotinoDllImports.cs" />
     <Compile Include="..\..\photino.NET\Photino.NET\PhotinoMonitorStruct.cs" Link="PhotinoMonitorStruct.cs" />
     <Compile Include="..\..\photino.NET\Photino.NET\PhotinoNativeDelegates.cs" Link="PhotinoNativeDelegates.cs" />
