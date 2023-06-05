@@ -731,6 +731,7 @@ void Photino::AttachWebView()
 						Settings->put_IsScriptEnabled(TRUE);
 						Settings->put_AreDefaultScriptDialogsEnabled(TRUE);
 						Settings->put_IsWebMessageEnabled(TRUE);
+						Settings->put_IsStatusBarEnabled(FALSE);
 
 						EventRegistrationToken webMessageToken;
 						_webviewWindow->AddScriptToExecuteOnDocumentCreated(L"window.external = { sendMessage: function(message) { window.chrome.webview.postMessage(message); }, receiveMessage: function(callback) { window.chrome.webview.addEventListener(\'message\', function(e) { callback(e.data); }); } };", nullptr);
