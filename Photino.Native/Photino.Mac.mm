@@ -82,6 +82,9 @@ Photino::Photino(PhotinoInitParams* initParams)
 
 	//these handlers are ALWAYS hooked up
 	_webMessageReceivedCallback = (WebMessageReceivedCallback)initParams->WebMessageReceivedHandler;
+    _webNavigationStartedCallback = (WebNavigationStartedCallback)initParams->WebNavigationStartedHandler;
+    _webContentLoadingCallback = (WebContentLoadingCallback)initParams->WebContentLoadingHandler;
+    _webNavigationCompletedCallback = (WebNavigationCompletedCallback)initParams->WebNavigationCompletedHandler;
 	_resizedCallback = (ResizedCallback)initParams->ResizedHandler;
 	_movedCallback = (MovedCallback)initParams->MovedHandler;
 	_closingCallback = (ClosingCallback)initParams->ClosingHandler;
@@ -615,13 +618,29 @@ void Photino::AttachWebView()
     UiDelegate *uiDelegate = [[[UiDelegate alloc] init] autorelease];
     uiDelegate->photino = this;
     uiDelegate->window = _window;
+    uiDelegate->webView = _webview;
     uiDelegate->webMessageReceivedCallback = _webMessageReceivedCallback;
+    uiDelegate->webNavigationStartedCallback = _webNavigationStartedCallback;
+    uiDelegate->webContentLoadingCallback = _webContentLoadingCallback;
+    uiDelegate->webNavigationCompletedCallback = _webNavigationCompletedCallback;
 
     [userContentController
         addScriptMessageHandler: uiDelegate
         name:@"photinointerop"];
 
+    [_webview
+        addObserver:uiDelegate
+        forKeyPath:@"estimatedProgress"
+        options:NSKeyValueObservingOptionNew
+        context:NULL];
+    [_webview
+        addObserver:uiDelegate
+        forKeyPath:@"title"
+        options:NSKeyValueObservingOptionNew
+        context:NULL];
+
     _webview.UIDelegate = uiDelegate;
+    _webview.navigationDelegate = uiDelegate;
 
     // TODO: Replace with WindowDelegate
     [[NSNotificationCenter defaultCenter]

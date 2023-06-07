@@ -1,3 +1,4 @@
+#include "Photino.h"
 #ifdef __APPLE__
 #import "Photino.Mac.UiDelegate.h"
 
@@ -99,6 +100,31 @@
 
 - (void)windowDidDeminiaturize:(NSNotification *)notification {
     photino->InvokeRestored();
+}
+
+- (void)webView:(WKWebView *)webView decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction decisionHandler:(void (^)(WKNavigationActionPolicy))decisionHandler {
+    webNavigationStartedCallback();
+    decisionHandler(WKNavigationActionPolicyAllow);
+}
+
+- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary<NSKeyValueChangeKey,id> *)change context:(void *)context {
+    if ([keyPath isEqualToString:@"estimatedProgress"]) {
+        if (webView.estimatedProgress == 1.0) {
+            webNavigationCompletedCallback();
+            self.contentLoadingCalled = NO;
+        } else {
+            if (!self.contentLoadingCalled) {
+                webContentLoadingCallback();
+                self.contentLoadingCalled = YES;
+            }
+        }
+    }
+}
+
+- (void)dealloc {
+    [webView removeObserver:self forKeyPath:@"estimatedProgress"];
+    [webView removeObserver:self forKeyPath:@"title"];
+    [super dealloc];
 }
 
 @end
