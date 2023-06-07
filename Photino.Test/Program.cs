@@ -75,6 +75,9 @@ namespace PhotinoNET
                 .RegisterLocationChangedHandler(WindowLocationChanged)
                 .RegisterSizeChangedHandler(WindowSizeChanged)
                 .RegisterWebMessageReceivedHandler(MessageReceivedFromWindow)
+                .RegisterWebNavigationStartedHandler(WebNavigationStarted)
+                .RegisterWebContentLoadingHandler(WebContentLoading)
+                .RegisterWebNavigationCompletedHandler(WebNavigationCompleted)
                 .RegisterWindowClosingHandler(WindowIsClosing)
                 .RegisterFocusInHandler(WindowFocusIn)
                 .RegisterFocusOutHandler(WindowFocusOut)
@@ -134,6 +137,9 @@ namespace PhotinoNET
                 WindowRestoredHandler = WindowRestored,
                 WindowMinimizedHandler = WindowMinimized,
                 WebMessageReceivedHandler = MessageReceivedFromWindow,
+                WebNavigationStartedHandler = WebNavigationStarted,
+                WebContentLoading = WebContentLoading,
+                WebNavigationCompletedHandler = WebNavigationCompleted,
                 WindowClosingHandler = WindowIsClosing,
                 WindowFocusInHandler = WindowFocusIn,
                 WindowFocusOutHandler = WindowFocusOut,
@@ -360,6 +366,21 @@ namespace PhotinoNET
             }
             else
                 throw new Exception($"Unknown message '{message}'");
+        }
+
+        private static void WebNavigationStarted(object sender, EventArgs e)
+        {
+            Log(sender, "WebNavigationStarted Callback Fired.");
+        }
+
+        private static void WebContentLoading(object sender, EventArgs e)
+        {
+            Log(sender, "WebContentLoading Callback Fired.");
+        }
+
+        private static void WebNavigationCompleted(object sender, EventArgs e)
+        {
+            Log(sender, "WebNavigationCompleted Callback Fired.");
         }
 
         private static void WindowCreating(object sender, EventArgs e)
