@@ -51,6 +51,7 @@ gboolean on_webview_context_menu(WebKitWebView *web_view,
 								 gboolean triggered_with_keyboard,
 								 gpointer user_data);
 gboolean on_permission_request(WebKitWebView *web_view, WebKitPermissionRequest *request, gpointer user_data);
+void on_load_changed(WebKitWebView *web_view, WebKitLoadEvent load_event, gpointer user_data);
 
 Photino::Photino(PhotinoInitParams *initParams) : _webview(nullptr)
 {
@@ -110,6 +111,9 @@ Photino::Photino(PhotinoInitParams *initParams) : _webview(nullptr)
 
 	// these handlers are ALWAYS hooked up
 	_webMessageReceivedCallback = (WebMessageReceivedCallback)initParams->WebMessageReceivedHandler;
+	_webNavigationStartedCallback = (WebNavigationStartedCallback)initParams->WebNavigationStartedHandler;
+	_webContentLoadingCallback = (WebContentLoadingCallback)initParams->WebContentLoadingHandler;
+	_webNavigationCompletedCallback = (WebNavigationCompletedCallback)initParams->WebNavigationCompletedHandler;
 	_resizedCallback = (ResizedCallback)initParams->ResizedHandler;
 	_movedCallback = (MovedCallback)initParams->MovedHandler;
 	_closingCallback = (ClosingCallback)initParams->ClosingHandler;
@@ -663,6 +667,8 @@ void Photino::Show()
 						 G_CALLBACK(HandleWebMessage), (void *)_webMessageReceivedCallback);
 		webkit_user_content_manager_register_script_message_handler(contentManager, "Photinointerop");
 
+		g_signal_connect(WEBKIT_WEB_VIEW(_webview), "load-changed", G_CALLBACK(on_load_changed), this);
+		
 		if (_startUrl != NULL)
 			Photino::NavigateToUrl(_startUrl);
 		else if (_startString != NULL)
@@ -758,6 +764,25 @@ gboolean on_permission_request(WebKitWebView *web_view, WebKitPermissionRequest 
 
 	webkit_permission_request_allow(request);
 	return FALSE;
+}
+
+void on_load_changed(WebKitWebView *web_view, WebKitLoadEvent load_event, gpointer user_data) 
+{
+	Photino *instance = ((Photino *)user_data);
+	switch (load_event)
+	{
+    case WEBKIT_LOAD_STARTED:
+        instance->InvokeWebNavigationStarted();
+        break;
+    case WEBKIT_LOAD_COMMITTED:
+        instance->InvokeWebContentLoading();
+        break;
+    case WEBKIT_LOAD_FINISHED:
+        instance->InvokeWebNavigationCompleted();
+        break;
+    default:
+        break;
+    }
 }
 
 void HandleCustomSchemeRequest(WebKitURISchemeRequest *request, gpointer user_data)
