@@ -127,6 +127,9 @@ Photino::Photino(PhotinoInitParams* initParams)
 
 	//these handlers are ALWAYS hooked up
 	_webMessageReceivedCallback = (WebMessageReceivedCallback)initParams->WebMessageReceivedHandler;
+	_webNavigationStartedCallback = (WebNavigationStartedCallback)initParams->WebNavigationStartedHandler;
+	_webContentLoadingCallback = (WebContentLoadingCallback)initParams->WebContentLoadingHandler;
+	_webNavigationCompletedCallback = (WebNavigationCompletedCallback)initParams->WebNavigationCompletedHandler;
 	_resizedCallback = (ResizedCallback)initParams->ResizedHandler;
 	_maximizedCallback = (MaximizedCallback)initParams->MaximizedHandler;
 	_restoredCallback = (RestoredCallback)initParams->RestoredHandler;
@@ -793,6 +796,33 @@ void Photino::AttachWebView()
 								})
 							.Get(),
 									&permissionRequestedToken);
+
+						EventRegistrationToken navigationStartingToken;
+						_webviewWindow->add_NavigationStarting(
+							Callback<ICoreWebView2NavigationStartingEventHandler>(
+								[&](ICoreWebView2* sender, ICoreWebView2NavigationStartingEventArgs* args) -> HRESULT {
+									InvokeWebNavigationStarted();
+									return S_OK;
+								})
+							.Get(), &navigationStartingToken);
+
+						EventRegistrationToken contentLoadingToken;
+						_webviewWindow->add_ContentLoading(
+							Callback<ICoreWebView2ContentLoadingEventHandler>(
+								[&](ICoreWebView2* sender, ICoreWebView2ContentLoadingEventArgs* args) -> HRESULT {
+									InvokeWebContentLoading();
+									return S_OK;
+								})
+							.Get(), &contentLoadingToken);
+
+						EventRegistrationToken navigationCompletedToken;
+						_webviewWindow->add_NavigationCompleted(
+							Callback<ICoreWebView2NavigationCompletedEventHandler>(
+								[&](ICoreWebView2* sender, ICoreWebView2NavigationCompletedEventArgs* args) -> HRESULT {
+									InvokeWebNavigationCompleted();
+									return S_OK;
+								})
+							.Get(), &navigationCompletedToken);
 
 						if (_startUrl != NULL)
 							NavigateToUrl(_startUrl);

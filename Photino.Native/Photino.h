@@ -39,6 +39,9 @@ struct Monitor
 typedef void (*ACTION)();
 typedef void (*WebMessageReceivedCallback)(AutoString message);
 typedef void *(*WebResourceRequestedCallback)(AutoString url, int *outNumBytes, AutoString *outContentType);
+typedef void (*WebNavigationStartedCallback)();
+typedef void (*WebContentLoadingCallback)();
+typedef void (*WebNavigationCompletedCallback)();
 typedef int (*GetAllMonitorsCallback)(const Monitor *monitor);
 typedef void (*ResizedCallback)(int width, int height);
 typedef void (*MaximizedCallback)();
@@ -76,9 +79,12 @@ struct PhotinoInitParams
 	MinimizedCallback *MinimizedHandler;
 	MovedCallback *MovedHandler;
 	WebMessageReceivedCallback *WebMessageReceivedHandler;
+	WebNavigationStartedCallback* WebNavigationStartedHandler;
+	WebContentLoadingCallback* WebContentLoadingHandler;
+	WebNavigationCompletedCallback* WebNavigationCompletedHandler;
 	wchar_t *CustomSchemeNamesWide[16];
 	char *CustomSchemeNames[16];
-	WebResourceRequestedCallback *CustomSchemeHandler;
+	WebResourceRequestedCallback *CustomSchemeHandler;	
 
 	int Left;
 	int Top;
@@ -106,6 +112,9 @@ class Photino
 {
 private:
 	WebMessageReceivedCallback _webMessageReceivedCallback;
+	WebNavigationStartedCallback _webNavigationStartedCallback;
+	WebContentLoadingCallback _webContentLoadingCallback;
+	WebNavigationCompletedCallback _webNavigationCompletedCallback;
 	MovedCallback _movedCallback;
 	ResizedCallback _resizedCallback;
 	MaximizedCallback _maximizedCallback;
@@ -275,5 +284,20 @@ public:
 	{
 		if (_minimizedCallback)
 			return _minimizedCallback();
+	}
+	void InvokeWebNavigationStarted()
+	{
+		if (_webNavigationStartedCallback)
+			_webNavigationStartedCallback();
+	}
+	void InvokeWebContentLoading()
+	{
+		if (_webContentLoadingCallback)
+			_webContentLoadingCallback();
+	}
+	void InvokeWebNavigationCompleted()
+	{
+		if (_webNavigationCompletedCallback)
+			_webNavigationCompletedCallback();
 	}
 };
