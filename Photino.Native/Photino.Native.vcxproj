@@ -7,7 +7,7 @@
     <Keyword>Win32Proj</Keyword>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
     <ProjectName>Photino.Native</ProjectName>
-    <OutDir>$(ProjectDir)$(Platform)\$(Configuration)\</OutDir>
+    <OutDir>$(ProjectDir)bin\$(Configuration)\$(Platform)\</OutDir>
   </PropertyGroup>
   <!-- Project Configuration -->
   <ItemGroup Label="ProjectConfigurations">
@@ -36,6 +36,20 @@
       <Platform>ARM64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="ext\WinToast\include\wintoastlib.h" />
+    <ClInclude Include="include\platform\windows\DarkMode.h" />
+    <ClInclude Include="include\platform\windows\ToastHandler.h" />
+    <ClInclude Include="include\shared\Dialog.h" />
+    <ClInclude Include="include\shared\Photino.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="ext\WinToast\src\wintoastlib.cpp" />
+    <ClCompile Include="src\platform\windows\DarkMode.cpp" />
+    <ClCompile Include="src\platform\windows\Dialog.cpp" />
+    <ClCompile Include="src\platform\windows\Photino.cpp" />
+    <ClCompile Include="src\shared\Exports.cpp" />
+  </ItemGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
@@ -43,7 +57,7 @@
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
@@ -99,21 +113,27 @@
   </ImportGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
+    <IntDir>obj\$(Configuration)\$(Platform)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
+    <IntDir>obj\$(Configuration)\$(Platform)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
+    <IntDir>obj\$(Configuration)\$(Platform)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
+    <IntDir>obj\$(Configuration)\$(Platform)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
     <LinkIncremental>true</LinkIncremental>
+    <IntDir>obj\$(Configuration)\$(Platform)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
     <LinkIncremental>false</LinkIncremental>
+    <IntDir>obj\$(Configuration)\$(Platform)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -122,6 +142,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>$(MSBuildProjectDirectory)\include\shared;$(MSBuildProjectDirectory)\include\platform\windows;$(MSBuildProjectDirectory)\ext\WinToast\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -130,9 +151,9 @@
     <PostBuildEvent>
       <Message>
       </Message>
-      <Command>COPY .\$(OutDir)Photino.Native.dll ..\Photino.Test\bin\Win32\Debug\net6.0\  
-COPY .\$(OutDir)Photino.Native.pdb ..\Photino.Test\bin\Win32\Debug\net6.0\
-COPY .\$(OutDir)WebView2Loader.dll ..\Photino.Test\bin\Win32\Debug\net6.0\</Command>
+      <Command>COPY .\$(OutDir)Photino.Native.dll ..\Photino.Test\bin\x86\Debug\net6.0\  
+COPY .\$(OutDir)Photino.Native.pdb ..\Photino.Test\bin\x86\Debug\net6.0\
+COPY .\$(OutDir)WebView2Loader.dll ..\Photino.Test\bin\x86\Debug\net6.0\</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -144,6 +165,7 @@ COPY .\$(OutDir)WebView2Loader.dll ..\Photino.Test\bin\Win32\Debug\net6.0\</Comm
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>$(MSBuildProjectDirectory)\include\shared;$(MSBuildProjectDirectory)\include\platform\windows;$(MSBuildProjectDirectory)\ext\WinToast\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -160,6 +182,7 @@ COPY .\$(OutDir)WebView2Loader.dll ..\Photino.Test\bin\Win32\Debug\net6.0\</Comm
       <PreprocessorDefinitions>_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <AdditionalIncludeDirectories>$(MSBuildProjectDirectory)\include\shared;$(MSBuildProjectDirectory)\include\platform\windows;$(MSBuildProjectDirectory)\ext\WinToast\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -184,6 +207,7 @@ COPY .\$(OutDir)WebView2Loader.dll ..\Photino.Test\bin\x64\Debug\net6.0\</Comman
       <PreprocessorDefinitions>NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <AdditionalIncludeDirectories>$(MSBuildProjectDirectory)\include\shared;$(MSBuildProjectDirectory)\include\platform\windows;$(MSBuildProjectDirectory)\ext\WinToast\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -201,6 +225,7 @@ COPY .\$(OutDir)WebView2Loader.dll ..\Photino.Test\bin\x64\Debug\net6.0\</Comman
       <PreprocessorDefinitions>_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <AdditionalIncludeDirectories>$(MSBuildProjectDirectory)\include\shared;$(MSBuildProjectDirectory)\include\platform\windows;$(MSBuildProjectDirectory)\ext\WinToast\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -225,6 +250,7 @@ COPY .\$(OutDir)WebView2Loader.dll ..\Photino.Test\bin\ARM64\Debug\net6.0\</Comm
       <PreprocessorDefinitions>NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <AdditionalIncludeDirectories>$(MSBuildProjectDirectory)\include\shared;$(MSBuildProjectDirectory)\include\platform\windows;$(MSBuildProjectDirectory)\ext\WinToast\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -234,34 +260,6 @@ COPY .\$(OutDir)WebView2Loader.dll ..\Photino.Test\bin\ARM64\Debug\net6.0\</Comm
       <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClCompile Include="Exports.cpp" />
-    <ClCompile Include="Dependencies\wintoastlib.cpp" />
-    <ClCompile Include="Photino.Linux.cpp" />
-    <ClCompile Include="Photino.Windows.cpp" />
-    <ClCompile Include="Photino.Windows.DarkMode.cpp" />
-    <ClCompile Include="Photino.Windows.Dialog.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="Dependencies\wintoastlib.h" />
-    <ClInclude Include="Photino.h" />
-    <ClInclude Include="Photino.Mac.AppDelegate.h" />
-    <ClInclude Include="Photino.Mac.UiDelegate.h" />
-    <ClInclude Include="Photino.Mac.UrlSchemeHandler.h" />
-    <ClInclude Include="Photino.Dialog.h" />
-    <ClInclude Include="Photino.Windows.ToastHandler.h" />
-    <ClInclude Include="Photino.Windows.DarkMode.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
-    <None Include="Photino.Mac.AppDelegate.mm" />
-    <None Include="Photino.Mac.mm" />
-    <None Include="Photino.Mac.UiDelegate.mm" />
-    <None Include="Photino.Mac.UrlSchemeHandler.mm" />
-    <None Include="Photino.Native.nuspec">
-      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64' or '$(Configuration)|$(Platform)'=='Debug|ARM64'">true</DeploymentContent>
-    </None>
-  </ItemGroup>
   <ImportGroup Label="ExtensionTargets">
     <Import Project="..\..\packages\Microsoft.Web.WebView2.1.0.664.37\build\native\Microsoft.Web.WebView2.targets" Condition="Exists('..\..\packages\Microsoft.Web.WebView2.1.0.664.37\build\native\Microsoft.Web.WebView2.targets')" />
     <Import Project="..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.201120.3\build\native\Microsoft.Windows.ImplementationLibrary.targets" Condition="Exists('..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.201120.3\build\native\Microsoft.Windows.ImplementationLibrary.targets')" />
