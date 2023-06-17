@@ -2,7 +2,7 @@
 //  sudo apt-get install libgtk-3-dev libwebkit2gtk-4.0-dev
 #ifdef __linux__
 #include "Photino.h"
-#include "Photino.Dialog.h"
+#include "Dialog.h"
 #include <mutex>
 #include <condition_variable>
 #include <X11/Xlib.h>

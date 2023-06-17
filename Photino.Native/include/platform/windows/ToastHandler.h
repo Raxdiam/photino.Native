@@ -1,7 +1,7 @@
 #ifndef TOASTHANDLER_H
 #define TOASTHANDLER_H
 #include "Photino.h"
-#include "Dependencies/wintoastlib.h"
+#include "wintoastlib.h"
 #include <WinUser.h>
 
 using namespace WinToastLib;

@@ -1,7 +1,7 @@
 #include "Photino.h"
-#include "Photino.Dialog.h"
-#include "Photino.Windows.DarkMode.h"
-#include "Photino.Windows.ToastHandler.h"
+#include "Dialog.h"
+#include "DarkMode.h"
+#include "ToastHandler.h"
 
 #include <mutex>
 #include <condition_variable>

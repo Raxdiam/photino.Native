@@ -1,4 +1,4 @@
-#include "Photino.Dialog.h"
+#include "Dialog.h"
 #include "Photino.h"
 
 #ifdef _WIN32
