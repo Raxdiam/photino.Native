@@ -38,7 +38,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="..\..\photino.NET\Photino.NET\**\*.cs" />
+    <Compile Include="..\..\photino.NET\Photino.NET\**\*.cs" 
+             Exclude="..\..\photino.NET\Photino.NET\**\bin\**\*;..\..\photino.NET\Photino.NET\**\obj\**\*;..\..\photino.NET\Photino.NET\**\Properties\**\*" />
   </ItemGroup>
 
   <ItemGroup>
