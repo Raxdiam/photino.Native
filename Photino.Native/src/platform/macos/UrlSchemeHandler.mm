@@ -1,5 +1,5 @@
 #ifdef __APPLE__
-#import "Photino.Mac.UrlSchemeHandler.h"
+#import "UrlSchemeHandler.h"
 
 @implementation UrlSchemeHandler : NSObject
 

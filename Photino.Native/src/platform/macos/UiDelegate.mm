@@ -1,5 +1,5 @@
 #ifdef __APPLE__
-#import "Photino.Mac.UiDelegate.h"
+#import "UiDelegate.h"
 
 @implementation UiDelegate : NSObject
 

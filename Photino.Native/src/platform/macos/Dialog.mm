@@ -1,4 +1,4 @@
-#import "Photino.Dialog.h"
+#import "Dialog.h"
 
 #if defined(VSTGUI_USE_OBJC_UTTYPE)
 #import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>

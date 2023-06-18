@@ -1,10 +1,10 @@
 #ifdef __APPLE__
 #include "Photino.h"
-#include "Photino.Dialog.h"
-#include "Photino.Mac.AppDelegate.h"
-#include "Photino.Mac.UiDelegate.h"
-#include "Photino.Mac.UrlSchemeHandler.h"
-#include "Photino.Mac.NSWindowBorderless.h"
+#include "Dialog.h"
+#include "AppDelegate.h"
+#include "UiDelegate.h"
+#include "UrlSchemeHandler.h"
+#include "NSWindowBorderless.h"
 #include <vector>
 
 using namespace std;
