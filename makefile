@@ -1,106 +1,122 @@
-CC=c++
-CFLAGS=-std=c++2a -Wall -O2 -shared -fPIC
-# CFLAGS=-std=c++2a -Wall -O0 -g -shared -fPIC
+PROJ = Photino.Native
+PROJ_TEST = Photino.Test
+PROJ_TEST_SDK = net6.0
 
-SRC=./Photino.Native
-SRC_SHARED=$(SRC)/Shared
-SRC_WIN=$(SRC)/Windows
-SRC_MAC=$(SRC)/macOS
-SRC_LIN=$(SRC)/Linux
+UNAME_S := $(shell uname -s)
 
-DEST_PATH=./lib
-DEST_PATH_X64=$(DEST_PATH)/x64
-DEST_PATH_ARM64=$(DEST_PATH)/arm64
+ifeq ($(UNAME_S),Darwin)
+    OS := Darwin
+else ifeq ($(UNAME_S),Linux)
+    OS := Linux
+else
+    OS := Windows_NT
+endif
 
-DEST_FILE=Photino.Native
+# x64, x86, ARM64
+ifeq ($(arch),)
+	ifeq ($(OS),Windows_NT)
+		ifeq ($(PROCESSOR_ARCHITECTURE),AMD64)
+    	arch := x64
+  	else ifeq ($(PROCESSOR_ARCHITECTURE),x86)
+  	  arch := x86
+  	else ifeq ($(PROCESSOR_ARCHITECTURE),ARM64)
+  	  arch := ARM64
+  	endif
+	else
+		UNIX_ARCH := $(shell uname -m)
+		ifeq ($(UNIX_ARCH),x86_64)
+    	arch := x64
+		else ifeq ($(UNIX_ARCH),arm64)
+		  arch := ARM64
+		endif
+	endif
+endif
+ARCH ?= $(arch)
 
-all:
-	# "make all is unavailable, use [windows|mac|linux](-x64|arm64)."
+build:
+	@echo "Building $(PROJ) for $(OS) $(ARCH)"
 
-windows: clean-x64 build-photino-windows
+build: clean build-release
+dev: build-debug copy
+gen: build-gen
 
-mac-universal: clean-x64 build-photino-mac-universal
-mac-x64: clean-x64 build-photino-mac-x64
-mac-arm64: clean-arm64 build-photino-mac-arm64
+ifeq ($(OS),Windows_NT)
+### Windows ###
 
-linux-x64: clean-x64 install-linux-dependencies build-photino-linux-x64
-linux-arm64: clean-arm64 install-linux-dependencies build-photino-linux-arm64
+build-release: install
+	msbuild $(PROJ).sln /p:Configuration=Release /p:Platform=$(ARCH)
 
-build-photino-windows:
-	# "build-photino-windows is not defined"
+build-debug: install
+	msbuild $(PROJ).sln /p:Configuration=Debug /p:Platform=$(ARCH)
 
-build-photino-mac-universal:
-	cp $(SRC)/Exports.cpp $(SRC)/Exports.mm &&\
-	$(CC) -o $(DEST_PATH_X64)/$(DEST_FILE).dylib\
-		  $(CFLAGS)\
-		  -arch x86_64\
-		  -arch arm64\
-		  -framework Cocoa\
-		  -framework WebKit\
-		  -framework UserNotifications\
-		  $(SRC)/Photino.Mac.AppDelegate.mm\
-		  $(SRC)/Photino.Mac.UiDelegate.mm\
-		  $(SRC)/Photino.Mac.UrlSchemeHandler.mm\
-		  $(SRC)/Photino.Mac.NSWindowBorderless.mm\
-		  $(SRC)/Photino.Mac.Dialog.mm\
-		  $(SRC)/Photino.Mac.mm\
-		  $(SRC)/Exports.mm &&\
-	rm $(SRC)/Exports.mm
+install: ; if not exist packages nuget restore
 
-build-photino-mac-x64:
-	cp $(SRC)/Exports.cpp $(SRC)/Exports.mm &&\
-	$(CC) -o $(DEST_PATH_X64)/$(DEST_FILE).dylib\
-		  $(CFLAGS)\
-		  -framework Cocoa\
-		  -framework WebKit\
-		  -framework UserNotifications\
-		  $(SRC)/Photino.Mac.AppDelegate.mm\
-		  $(SRC)/Photino.Mac.UiDelegate.mm\
-		  $(SRC)/Photino.Mac.UrlSchemeHandler.mm\
-		  $(SRC)/Photino.Mac.NSWindowBorderless.mm\
-		  $(SRC)/Photino.Mac.Dialog.mm\
-		  $(SRC)/Photino.Mac.mm\
-		  $(SRC)/Exports.mm &&\
-	rm $(SRC)/Exports.mm
+PLATFORM?=$(ARCH)
+ifeq ($(ARCH),x86)
+	PLATFORM=Win32
+endif
 
-build-photino-mac-arm64:
-	cp $(SRC)/Exports.cpp $(SRC)/Exports.mm &&\
-	$(CC) -o $(DEST_PATH_ARM64)/$(DEST_FILE).dylib\
-		  $(CFLAGS)\
-		  -framework Cocoa\
-		  -framework WebKit\
-		  -framework UserNotifications\
-		  $(SRC)/Photino.Mac.AppDelegate.mm\
-		  $(SRC)/Photino.Mac.UiDelegate.mm\
-		  $(SRC)/Photino.Mac.UrlSchemeHandler.mm\
-		  $(SRC)/Photino.Mac.NSWindowBorderless.mm\
-		  $(SRC)/Photino.Mac.Dialog.mm\
-		  $(SRC)/Photino.Mac.mm\
-		  $(SRC)/Exports.mm &&\
-	rm $(SRC)/Exports.mm
+copy:
+	xcopy /y /q "$(PROJ)\bin\Debug\$(PLATFORM)\$(PROJ).dll" "$(PROJ_TEST)\bin\$(ARCH)\Debug\$(PROJ_TEST_SDK)\" > nul
+	xcopy /y /q "$(PROJ)\bin\Debug\$(PLATFORM)\$(PROJ).pdb" "$(PROJ_TEST)\bin\$(ARCH)\Debug\$(PROJ_TEST_SDK)\" > nul
+	xcopy /y /q "$(PROJ)\bin\Debug\$(PLATFORM)\WebView2Loader.dll" "$(PROJ_TEST)\bin\$(ARCH)\Debug\$(PROJ_TEST_SDK)\" > nul
 
-install-linux-dependencies:
-	sudo apt-get update\
-	&& sudo apt-get install libgtk-3-dev libwebkit2gtk-4.0-dev libnotify4 libnotify-dev
+clean:
+	if exist $(PROJ)\bin rmdir /s /q $(PROJ)\bin
+	if exist $(PROJ)\obj rmdir /s /q $(PROJ)\obj
+	if exist packages rmdir /s /q packages
+######
+else ifeq ($(OS),Darwin)
+### macOS ###
+OS_ARCH=x86_64
+ifeq ($(ARCH),x64)
+	OS_ARCH=x86_64
+else ifeq ($(ARCH),ARM64)
+	OS_ARCH=arm64
+endif
 
-build-photino-linux-x64:
-	$(CC) -o $(DEST_PATH_X64)/$(DEST_FILE).so\
-		  $(CFLAGS)\
-		  $(SRC)/Photino.Linux.Dialog.cpp\
-		  $(SRC)/Photino.Linux.cpp\
-		  $(SRC)/Exports.cpp\
-		  `pkg-config --cflags --libs gtk+-3.0 webkit2gtk-4.0 libnotify`
+build-gen:
+	cmake \
+	--no-warn-unused-cli \
+	-DCMAKE_OSX_ARCHITECTURES=$(OS_ARCH) \
+	-DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=TRUE \
+	-DCMAKE_BUILD_TYPE:STRING=Debug \
+	-S$(shell pwd) -B$(shell pwd)/build -G "Unix Makefiles"
 
-build-photino-linux-arm64:
-	$(CC) -o $(DEST_PATH_ARM64)/$(DEST_FILE).so\
-		  $(CFLAGS)\
-		  $(SRC)/Photino.Linux.Dialog.cpp\
-		  $(SRC)/Photino.Linux.cpp\
-		  $(SRC)/Exports.cpp\
-		  `pkg-config --cflags --libs gtk+-3.0 webkit2gtk-4.0 libnotify`
+build-release: build-gen	
+	cd build && make
+	rm -f $(PROJ)/src/shared/Exports.mm
 
-clean-x64:
-	rm -rf $(DEST_PATH_X64)/* & mkdir -p $(DEST_PATH_X64)
+build-debug: build-release
 
-clean-arm64:
-	rm -rf $(DEST_PATH_ARM64)/* & mkdir -p $(DEST_PATH_ARM64)
+install:
+
+copy:
+	cp build/$(PROJ).dylib $(PROJ_TEST)/bin/Debug/$(PROJ_TEST_SDK)/$(PROJ).dylib
+
+clean:
+	rm -rf build
+	rm -f $(PROJ)/src/shared/Exports.mm
+######
+else ifeq ($(OS),Linux)
+### Linux ###
+build-gen:
+	mkdir -p build && cd build && cmake ..
+
+build-release: build-gen
+	cd build && make
+
+build-debug: build-release
+
+install:
+	sudo apt-get update
+	sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev libnotify4 libnotify-dev
+
+copy:
+	cp build/$(PROJ).so $(PROJ_TEST)/bin/Debug/$(PROJ_TEST_SDK)/$(PROJ).so
+
+clean:
+	rm -rf build
+
+######
+endif
