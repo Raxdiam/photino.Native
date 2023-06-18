@@ -3,6 +3,8 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
+Photino.Native/src/shared/Exports.mm
+
 # User-specific files
 *.rsuser
 *.suo
@@ -26,6 +28,7 @@ bld/
 [Bb]in/
 [Oo]bj/
 [Ll]og/
+build/
 
 # Visual Studio 2015/2017 cache/options directory
 .vs/
