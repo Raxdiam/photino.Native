@@ -1,0 +1,52 @@
+name: Photino.Native Testing
+on:
+  push:
+    branches: [debug-restructure]
+env:
+  PROJ: Photino.Native
+jobs:
+  build_windows:
+    runs-on: windows-latest
+    name: Build Windows x64/x86/ARM64
+    steps:
+      - uses: actions/checkout@v3
+      - uses: microsoft/setup-msbuild@v1.3.1
+      
+      - name: Install dependencies
+        run: make install
+      
+      - name: Build
+        run: |
+          make arch=x64
+          make arch=x86
+          make arch=ARM64
+
+      - name: Upload x64 artifact
+        env:
+          DLL_PATH: ./${{ env.PROJ }}/bin/Release/x64
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ env.PROJ }}-x64
+          path: |
+            ${{ env.DLL_PATH }}/${{ env.PROJ }}.dll
+            ${{ env.DLL_PATH }}/WebView2Loader.dll
+      
+      - name: Upload x86 artifact
+        env:
+          DLL_PATH: ./${{ env.PROJ }}/bin/Release/Win32
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ env.PROJ }}-x86
+          path: |
+            ${{ env.DLL_PATH }}/${{ env.PROJ }}.dll
+            ${{ env.DLL_PATH }}/WebView2Loader.dll
+      
+      - name: Upload ARM64 artifact
+        env:
+          DLL_PATH: ./${{ env.PROJ }}/bin/Release/ARM64
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ env.PROJ }}-ARM64
+          path: |
+            ${{ env.DLL_PATH }}/${{ env.PROJ }}.dll
+            ${{ env.DLL_PATH }}/WebView2Loader.dll
