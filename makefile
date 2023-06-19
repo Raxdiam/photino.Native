@@ -46,7 +46,7 @@ build-release: install
 build-debug: install
 	msbuild $(PROJ).sln /p:Configuration=Debug /p:Platform=$(ARCH)
 
-install: ; if not exist packages nuget restore
+install: ; [ ! -d "packages" ] && nuget restore || :
 
 PLATFORM?=$(ARCH)
 ifeq ($(ARCH),x86)
@@ -54,14 +54,14 @@ ifeq ($(ARCH),x86)
 endif
 
 copy:
-	xcopy /y /q "$(PROJ)\bin\Debug\$(PLATFORM)\$(PROJ).dll" "$(PROJ_TEST)\bin\$(ARCH)\Debug\$(PROJ_TEST_SDK)\" > nul
-	xcopy /y /q "$(PROJ)\bin\Debug\$(PLATFORM)\$(PROJ).pdb" "$(PROJ_TEST)\bin\$(ARCH)\Debug\$(PROJ_TEST_SDK)\" > nul
-	xcopy /y /q "$(PROJ)\bin\Debug\$(PLATFORM)\WebView2Loader.dll" "$(PROJ_TEST)\bin\$(ARCH)\Debug\$(PROJ_TEST_SDK)\" > nul
+	cp $(PROJ)/bin/Debug/$(PLATFORM)/$(PROJ).dll $(PROJ_TEST)/bin/Debug/$(PROJ_TEST_SDK)/
+	cp $(PROJ)/bin/Debug/$(PLATFORM)/$(PROJ).pdb $(PROJ_TEST)/bin/Debug/$(PROJ_TEST_SDK)/
+	cp $(PROJ)/bin/Debug/$(PLATFORM)/WebView2Loader.dll $(PROJ_TEST)/bin/Debug/$(PROJ_TEST_SDK)/
 
 clean:
-	if exist $(PROJ)\bin rmdir /s /q $(PROJ)\bin
-	if exist $(PROJ)\obj rmdir /s /q $(PROJ)\obj
-	if exist packages rmdir /s /q packages
+	rm -rf $(PROJ)/bin
+	rm -rf $(PROJ)/obj
+	rm -rf packages
 ######
 else ifeq ($(OS),Darwin)
 ### macOS ###
