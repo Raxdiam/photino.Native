@@ -33,7 +33,7 @@ ifeq ($(arch),)
 endif
 ARCH ?= $(arch)
 
-build: clean build-release
+build: build-release
 dev: build-debug copy
 gen: build-gen
 
