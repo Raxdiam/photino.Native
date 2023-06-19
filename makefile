@@ -2,20 +2,20 @@ PROJ = Photino.Native
 PROJ_TEST = Photino.Test
 PROJ_TEST_SDK = net6.0
 
-UNAME_S := $(shell uname -s)
-
-ifeq ($(UNAME_S),Darwin)
-    OS := Darwin
-else ifeq ($(UNAME_S),Linux)
-    OS := Linux
+ifeq ($(OS),Windows_NT)
+    # Windows
+else ifeq ($(value UNAME_S),Linux)
+		OS := Linux
+else ifeq ($(value UNAME_S),Darwin)
+		OS := Darwin
 else
-    OS := Windows_NT
+    $(error Unsupported operating system)
 endif
 
 # x64, x86, ARM64
 ifeq ($(arch),)
 	ifeq ($(OS),Windows_NT)
-		ifeq ($(PROCESSOR_ARCHITECTURE),AMD64)
+		ifeq ($(PROCESSOR_ARCHITEW6432),AMD64)
     	arch := x64
   	else ifeq ($(PROCESSOR_ARCHITECTURE),x86)
   	  arch := x86
@@ -32,9 +32,6 @@ ifeq ($(arch),)
 	endif
 endif
 ARCH ?= $(arch)
-
-build:
-	@echo "Building $(PROJ) for $(OS) $(ARCH)"
 
 build: clean build-release
 dev: build-debug copy
