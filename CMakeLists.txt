@@ -9,8 +9,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(PROJ_DIR ${CMAKE_CURRENT_SOURCE_DIR}/Photino.Native)
 
 if(APPLE)
-  #set(CMAKE_C_COMPILER "/usr/bin/clang")
-  #set(CMAKE_CXX_COMPILER "/usr/bin/clang++")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
   
   configure_file(${PROJ_DIR}/src/shared/Exports.cpp ${PROJ_DIR}/src/shared/Exports.mm COPYONLY)
