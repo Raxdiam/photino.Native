@@ -6,47 +6,100 @@ env:
   PROJ: Photino.Native
 jobs:
   build_windows:
+    name: Build Windows
     runs-on: windows-latest
-    name: Build Windows x64/x86/ARM64
     steps:
       - uses: actions/checkout@v3
       - uses: microsoft/setup-msbuild@v1.3.1
 
-      - name: Install dependencies
-        run: make install
-      
       - name: Build
-        run: |
-          make arch=x64
-          make arch=x86
-          make arch=ARM64
+        run: make all
 
       - name: Upload x64 artifact
         env:
-          DLL_PATH: ./${{ env.PROJ }}/bin/Release/x64
+          OUT_PATH: ./${{ env.PROJ }}/bin/Release/x64
         uses: actions/upload-artifact@v3
         with:
           name: ${{ env.PROJ }}-windows-x64
           path: |
-            ${{ env.DLL_PATH }}/${{ env.PROJ }}.dll
-            ${{ env.DLL_PATH }}/WebView2Loader.dll
+            ${{ env.OUT_PATH }}/${{ env.PROJ }}.dll
+            ${{ env.OUT_PATH }}/WebView2Loader.dll
       
       - name: Upload x86 artifact
         env:
-          DLL_PATH: ./${{ env.PROJ }}/bin/Release/Win32
+          OUT_PATH: ./${{ env.PROJ }}/bin/Release/Win32
         uses: actions/upload-artifact@v3
         with:
           name: ${{ env.PROJ }}-windows-x86
           path: |
-            ${{ env.DLL_PATH }}/${{ env.PROJ }}.dll
-            ${{ env.DLL_PATH }}/WebView2Loader.dll
+            ${{ env.OUT_PATH }}/${{ env.PROJ }}.dll
+            ${{ env.OUT_PATH }}/WebView2Loader.dll
       
-      - name: Upload ARM64 artifact
+      - name: Upload arm64 artifact
         env:
-          DLL_PATH: ./${{ env.PROJ }}/bin/Release/ARM64
+          OUT_PATH: ./${{ env.PROJ }}/bin/Release/ARM64
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ env.PROJ }}-windows-ARM64
+          name: ${{ env.PROJ }}-windows-arm64
           path: |
-            ${{ env.DLL_PATH }}/${{ env.PROJ }}.dll
-            ${{ env.DLL_PATH }}/WebView2Loader.dll
+            ${{ env.OUT_PATH }}/${{ env.PROJ }}.dll
+            ${{ env.OUT_PATH }}/WebView2Loader.dll
+
+  build_macos:
+    name: Build for macOS
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Build
+        run: make all
+
+      - name: Upload x64 artifact
+        uses: actions/upload-artifact@v3
+        with:
+          path: ./build/x64/Photino.Native.dylib
+          name: ${{ env.PROJ }}-macos-x64
+      
+      - name: Upload arm64 artifact
+        uses: actions/upload-artifact@v3
+        with:
+          path: ./build/arm64/Photino.Native.dylib
+          name: ${{ env.PROJ }}-macos-arm64
+
+      - name: Upload universal artifact
+        uses: actions/upload-artifact@v3
+        with:
+          path: ./build/universal/Photino.Native.dylib
+          name: ${{ env.PROJ }}-macos-universal
+
+  build_linux:
+    name: Build for Linux
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            rid: linux-x64
+            platform: 'Linux-x64'
+          - os: ubuntu-latest
+            rid: linux-arm64
+            platform: 'Linux-arm64'
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Build
+        run: make
+
+      - name: Upload x64 artifact
+        uses: actions/upload-artifact@v3
+        with:
+          path: ./build/Photino.Native.so
+          name: ${{ env.PROJ }}-linux-x64
+        if: ${{ matrix.rid }} == linux-x64
+
+      - name: Upload arm64 artifact
+        uses: actions/upload-artifact@v3
+        with:
+          path: ./build/Photino.Native.so
+          name: ${{ env.PROJ }}-linux-arm64
+        if: ${{ matrix.rid }} == linux-arm64
