@@ -106,9 +106,15 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - uses: actions/download-artifact@v3
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
         with:
           path: artifacts
+
+      - name: Delete artifacts
+        uses: geekyeggo/delete-artifact@v2
+        with:
+          name: ${{ env.PROJ }}-*
       
       - name: Create NuGet package
         run: nuget pack ${{ env.PROJ }}.nuspec -Version ${{ env.VERSION }} -NonInteractive -Properties version=${{ env.VERSION }}
@@ -117,5 +123,3 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           path: ${{ env.PROJ }}.${{ env.VERSION }}.nupkg
-          name: ${{ env.PROJ }}-nuget
-        
