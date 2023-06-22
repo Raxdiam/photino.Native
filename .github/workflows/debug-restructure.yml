@@ -59,13 +59,13 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           path: ./build/x64/Photino.Native.dylib
-          name: ${{ env.PROJ }}-macos-x64
+          name: ${{ env.PROJ }}-osx-x64
       
       - name: Upload arm64 artifact
         uses: actions/upload-artifact@v3
         with:
           path: ./build/arm64/Photino.Native.dylib
-          name: ${{ env.PROJ }}-macos-arm64
+          name: ${{ env.PROJ }}-osx-arm64
 
   build_linux:
     name: Build for Linux
