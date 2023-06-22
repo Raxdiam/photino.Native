@@ -4,6 +4,7 @@ on:
     branches: [debug-restructure]
 env:
   PROJ: Photino.Native
+  VERSION: 2.5.0
 jobs:
   build_windows:
     name: Build Windows
@@ -66,12 +67,6 @@ jobs:
           path: ./build/arm64/Photino.Native.dylib
           name: ${{ env.PROJ }}-macos-arm64
 
-      - name: Upload universal artifact
-        uses: actions/upload-artifact@v3
-        with:
-          path: ./build/universal/Photino.Native.dylib
-          name: ${{ env.PROJ }}-macos-universal
-
   build_linux:
     name: Build for Linux
     runs-on: ${{ matrix.os }}
@@ -103,3 +98,24 @@ jobs:
           path: ./build/Photino.Native.so
           name: ${{ env.PROJ }}-linux-arm64
         if: ${{ matrix.rid }} == linux-arm64
+
+  package:
+    name: Package NuGet
+    needs: [build_windows, build_macos, build_linux]
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/download-artifact@v3
+        with:
+          path: artifacts
+      
+      - name: Create NuGet package
+        run: nuget pack ${{ env.PROJ }}.nuspec -Version ${{ env.VERSION }} -NonInteractive -Properties version=${{ env.VERSION }}
+
+      - name: Upload NuGet package artifact
+        uses: actions/upload-artifact@v3
+        with:
+          path: ${{ env.PROJ }}.${{ env.VERSION }}.nupkg
+          name: ${{ env.PROJ }}-nuget
+        
