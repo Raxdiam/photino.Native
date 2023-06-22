@@ -78,7 +78,6 @@ dev: setup-dev
 all:
 	$(MAKE) build arch=arm64
 	$(MAKE) build arch=x64
-	$(MAKE) build-universal
 setup:
 	$(eval CONFIG := Release)
 	$(eval BUILD := build/$(ARCH))
