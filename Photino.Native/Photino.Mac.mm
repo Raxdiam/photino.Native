@@ -165,7 +165,7 @@ Photino::Photino(PhotinoInitParams* initParams)
 		initParams->Width = 800; //CW_USEDEFAULT;
 		initParams->Height = 600; //CW_USEDEFAULT;
 	}
-	else
+    else
 	{
 		if (initParams->Width < 0) initParams->Width = 800; //CW_USEDEFAULT;
 		if (initParams->Height < 0) initParams->Height = 600; //CW_USEDEFAULT;
