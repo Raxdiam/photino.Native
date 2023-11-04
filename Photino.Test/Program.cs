@@ -123,6 +123,7 @@ namespace PhotinoNET
                 .RegisterWindowClosingHandler(WindowIsClosing)
                 .RegisterFocusInHandler(WindowFocusIn)
                 .RegisterFocusOutHandler(WindowFocusOut)
+                .RegisterFileDragDrop(FileDragDrop)
 
                 .SetLogVerbosity(_logEvents ? 2 : 0);
 
@@ -483,6 +484,11 @@ namespace PhotinoNET
         private static void WindowFocusOut(object sender, EventArgs e)
         {
             Log(sender, "WindowFocusOut Callback Fired.");
+        }
+
+        private static void FileDragDrop(object sender, string id, string[] files)
+        {
+            Log(sender, $"FileDragDrop Callback Fired. {id}: {JsonSerializer.Serialize(files, new JsonSerializerOptions { WriteIndented = true })}");
         }
 
 

@@ -10,7 +10,6 @@
 #include <wrl.h>
 #include <windows.h>
 #include <algorithm>
-#include <limits>
 #include <WebView2EnvironmentOptions.h>
 
 #pragma comment(lib, "Urlmon.lib")
@@ -168,6 +167,7 @@ Photino::Photino(PhotinoInitParams* initParams)
 	_closingCallback = (ClosingCallback)initParams->ClosingHandler;
 	_focusInCallback = (FocusInCallback)initParams->FocusInHandler;
 	_focusOutCallback = (FocusOutCallback)initParams->FocusOutHandler;
+	_fileDragDropCallback = (FileDragDropCallback)initParams->FileDragDropHandler;
 	_customSchemeCallback = (WebResourceRequestedCallback)initParams->CustomSchemeHandler;
 
 	//copy strings from the fixed size array passed, but only if they have a value.
@@ -870,14 +870,62 @@ void Photino::AttachWebView()
 						Settings->put_IsScriptEnabled(TRUE);
 						Settings->put_AreDefaultScriptDialogsEnabled(TRUE);
 						Settings->put_IsWebMessageEnabled(TRUE);
-
+												
 						EventRegistrationToken webMessageToken;
 						_webviewWindow->AddScriptToExecuteOnDocumentCreated(L"window.external = { sendMessage: function(message) { window.chrome.webview.postMessage(message); }, receiveMessage: function(callback) { window.chrome.webview.addEventListener(\'message\', function(e) { callback(e.data); }); } };", nullptr);
 						_webviewWindow->add_WebMessageReceived(Callback<ICoreWebView2WebMessageReceivedEventHandler>(
 							[&](ICoreWebView2* webview, ICoreWebView2WebMessageReceivedEventArgs* args) -> HRESULT {
 								wil::unique_cotaskmem_string message;
 								args->TryGetWebMessageAsString(&message);
-								_webMessageReceivedCallback(message.get());
+
+								const auto filedropPrefix = L"filedragdrop:";
+								const auto filedropPrefixLen = wcslen(filedropPrefix);
+								const auto msg = message.get();
+
+								if (wcsncmp(msg, filedropPrefix, filedropPrefixLen) == 0) {
+									const wil::com_ptr<ICoreWebView2WebMessageReceivedEventArgs2> args2 =
+										wil::com_ptr<ICoreWebView2WebMessageReceivedEventArgs>(args)
+										.query<ICoreWebView2WebMessageReceivedEventArgs2>();
+
+									if (args2) {
+										wil::com_ptr<ICoreWebView2ObjectCollectionView> objectsCollection;
+										args2->get_AdditionalObjects(&objectsCollection);
+										unsigned int length;
+										objectsCollection->get_Count(&length);
+										std::vector<std::wstring> paths;
+
+										for (unsigned int i = 0; i < length; i++) {
+											wil::com_ptr<IUnknown> object;
+											objectsCollection->GetValueAtIndex(i, &object);
+											if (object) {
+												wil::com_ptr<ICoreWebView2File> file =
+													object.query<ICoreWebView2File>();
+												if (file) {
+													wil::unique_cotaskmem_string path;
+													file->get_Path(&path);
+													paths.emplace_back(path.get());
+												}
+											}
+										}
+
+										const auto pathsc = new wchar_t* [paths.size()];
+										for (size_t i = 0; i < paths.size(); ++i) {
+											pathsc[i] = new wchar_t[paths[i].size() + 1];
+											wcsncpy_s(pathsc[i], paths[i].size() + 1, paths[i].c_str(), _TRUNCATE);
+										}
+
+										const auto msgSplitPoint = wcschr(msg, L':');
+										if (msgSplitPoint != nullptr) {
+											const auto id = msgSplitPoint + 1;
+											InvokeFileDragDrop(id, pathsc, static_cast<int>(paths.size()));
+										}
+
+									}
+
+									return S_OK;
+								}
+
+								_webMessageReceivedCallback(msg);
 								return S_OK;
 							}).Get(), &webMessageToken);
 

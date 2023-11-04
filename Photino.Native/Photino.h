@@ -1,3 +1,4 @@
+
 #pragma once
 
 #ifdef _WIN32
@@ -50,6 +51,7 @@ typedef void (*MovedCallback)(int x, int y);
 typedef bool (*ClosingCallback)();
 typedef void (*FocusInCallback)();
 typedef void (*FocusOutCallback)();
+typedef void (*FileDragDropCallback)(AutoString id, AutoString* files, int numFiles);
 
 class PhotinoDialog;
 class Photino;
@@ -81,6 +83,7 @@ struct PhotinoInitParams
 	RestoredCallback *RestoredHandler;
 	MinimizedCallback *MinimizedHandler;
 	MovedCallback *MovedHandler;
+	FileDragDropCallback* FileDragDropHandler;
 	WebMessageReceivedCallback *WebMessageReceivedHandler;
 	wchar_t *CustomSchemeNamesWide[16];
 	char *CustomSchemeNames[16];
@@ -130,6 +133,7 @@ private:
 	ClosingCallback _closingCallback;
 	FocusInCallback _focusInCallback;
 	FocusOutCallback _focusOutCallback;
+	FileDragDropCallback _fileDragDropCallback;
 	std::vector<AutoString> _customSchemeNames;
 	WebResourceRequestedCallback _customSchemeCallback;
 
@@ -294,6 +298,7 @@ public:
 	void SetMaximizedCallback(MaximizedCallback callback) { _maximizedCallback = callback; }
 	void SetRestoredCallback(RestoredCallback callback) { _restoredCallback = callback; }
 	void SetMinimizedCallback(MinimizedCallback callback) { _minimizedCallback = callback; }
+	void SetFileDragDropCallback(FileDragDropCallback callback) { _fileDragDropCallback = callback; }
 
 	void Invoke(ACTION callback);
 	bool InvokeClose()
@@ -337,5 +342,10 @@ public:
 	{
 		if (_minimizedCallback)
 			return _minimizedCallback();
+	}
+	void InvokeFileDragDrop(AutoString id, AutoString* files, int numFiles)
+	{
+		if (_fileDragDropCallback)
+			return _fileDragDropCallback(id, files, numFiles);
 	}
 };
