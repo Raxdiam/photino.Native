@@ -1,3 +1,6 @@
+#include "Photino.Mac.WebView.h"
+#include <AppKit/AppKit.h>
+#include <WebKit/WebKit.h>
 #ifdef __APPLE__
 #include "Photino.h"
 #include "Photino.Dialog.h"
@@ -5,6 +8,7 @@
 #include "Photino.Mac.UiDelegate.h"
 #include "Photino.Mac.UrlSchemeHandler.h"
 #include "Photino.Mac.NSWindowBorderless.h"
+#include "Photino.Mac.WebView.h"
 #include <vector>
 
 #include "json.hpp"
@@ -145,6 +149,7 @@ Photino::Photino(PhotinoInitParams* initParams)
     _maximizedCallback = (MaximizedCallback)initParams->MaximizedHandler;
 	_minimizedCallback = (MinimizedCallback)initParams->MinimizedHandler;
 	_restoredCallback = (RestoredCallback)initParams->RestoredHandler;
+    _fileDragDropCallback = (FileDragDropCallback)initParams->FileDragDropHandler;
 	_customSchemeCallback = (WebResourceRequestedCallback)initParams->CustomSchemeHandler;
 
 	//copy strings from the fixed size array passed, but only if they have a value.
@@ -829,18 +834,37 @@ void Photino::AddCustomScheme(AutoString scheme, WebResourceRequestedCallback re
 
 void Photino::AttachWebView()
 {
-    NSString *initScriptSource = @"window.__receiveMessageCallbacks = [];"
-			"window.__dispatchMessageCallback = function(message) {"
-			"	window.__receiveMessageCallbacks.forEach(function(callback) { callback(message); });"
-			"};"
-			"window.external = {"
-			"	sendMessage: function(message) {"
-			"		window.webkit.messageHandlers.photinointerop.postMessage(message);"
-			"	},"
-			"	receiveMessage: function(callback) {"
-			"		window.__receiveMessageCallbacks.push(callback);"
-			"	}"
-			"};";
+    NSString *initScriptSource =
+            @"window.__receiveMessageCallbacks = [];"
+            @"window.__dispatchMessageCallback = function(message) {"
+            @"    window.__receiveMessageCallbacks.forEach(function(callback) {"
+            @"        callback(message);"
+            @"    });"
+            @"};"
+            @""
+            @"window.external = {"
+            @"  sendMessage: function (message) {"
+            @"    window.webkit.messageHandlers.photinointerop.postMessage(message);"
+            @"  },"
+            @"  receiveMessage: function (callback) {"
+            @"    window.__receiveMessageCallbacks.push(callback);"
+            @"  },"
+            @"  handleDragDrop: function (el, ondragover, ondragleave, ondrop) {"
+            @"    if (typeof el === \"string\") el = document.getElementById(el);"
+            @"    if (!el) return;"
+            @"    if (!el.id) throw new Error(\"Element must have an id attribute\");"
+            @"    el.addEventListener(\"dragover\", function (ev) {"
+            @"      ev.preventDefault();"
+            @"      ondragover(ev);"
+            @"    });"
+            @"    el.addEventListener(\"dragleave\", ondragleave);"
+            @"    el.addEventListener(\"drop\", function (ev) {"
+            @"      ev.preventDefault();"
+            @"      window.webkit.messageHandlers.dropHandler.postMessage({ type: 'drop', elementId: el.id });"
+            @"      ondrop(ev);"
+            @"    });"
+            @"  }"
+            @"};";
 
     WKUserScript *initScript = [
         [WKUserScript alloc]
@@ -853,11 +877,14 @@ void Photino::AttachWebView()
     _webviewConfiguration.userContentController = userContentController;
 
     _webview = [
-        [WKWebView alloc]
+        [PhotinoWebView alloc]
         initWithFrame: _window.contentView.frame
         configuration: _webviewConfiguration];
+    ((PhotinoWebView *)_webview)->fileDragDropCallback = _fileDragDropCallback;
+
 
     [_webview setAutoresizingMask: NSViewWidthSizable | NSViewHeightSizable];
+    [_webview registerForDraggedTypes:@[NSPasteboardTypeFileURL]];
     [_window.contentView addSubview: _webview];
     [_window.contentView setAutoresizesSubviews: true];
 

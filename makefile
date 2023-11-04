@@ -20,6 +20,8 @@ all:
 windows: clean-x64 build-photino-windows
 
 mac-universal: clean-x64 build-photino-mac-universal
+mac-dev: clean-x64 build-photino-mac-universal
+	cp $(DEST_PATH_X64)/$(DEST_FILE).dylib ./Photino.Test/bin/Debug/net7.0/$(DEST_FILE).dylib
 
 linux-x64: clean-x64 install-linux-dependencies build-photino-linux-x64
 linux-arm64: clean-arm64 install-linux-dependencies build-photino-linux-arm64
@@ -40,6 +42,7 @@ build-photino-mac-universal:
 		  $(SRC)/Photino.Mac.UiDelegate.mm\
 		  $(SRC)/Photino.Mac.UrlSchemeHandler.mm\
 		  $(SRC)/Photino.Mac.NSWindowBorderless.mm\
+		  $(SRC)/Photino.Mac.WebView.mm\
 		  $(SRC)/Photino.Mac.Dialog.mm\
 		  $(SRC)/Photino.Mac.mm\
 		  $(SRC)/Exports.mm &&\
