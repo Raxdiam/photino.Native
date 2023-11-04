@@ -871,8 +871,34 @@ void Photino::AttachWebView()
 						Settings->put_AreDefaultScriptDialogsEnabled(TRUE);
 						Settings->put_IsWebMessageEnabled(TRUE);
 												
+						const auto scriptSource = 
+							L"window.external = {\n"
+							L"  sendMessage: function (message) {\n"
+							L"    window.chrome.webview.postMessage(message);\n"
+							L"  },\n"
+							L"  receiveMessage: function (callback) {\n"
+							L"    window.chrome.webview.addEventListener('message', function (e) {\n"
+							L"      callback(e.data);\n"
+							L"    });\n"
+							L"  },\n"
+							L"  handleDragDrop: function (el, ondragover, ondragleave, ondrop) {\n"
+							L"    if (typeof el === \"string\") el = document.getElementById(el);\n"
+							L"    if (!el) return;\n"
+							L"    if (!el.id) throw new Error(\"Element must have an id attribute\");\n"
+							L"    el.addEventListener(\"dragover\", function (ev) {\n"
+							L"      ev.preventDefault();\n"
+							L"      ondragover(ev);\n"
+							L"    });\n"
+							L"    el.addEventListener(\"dragleave\", ondragleave);\n"
+							L"    el.addEventListener(\"drop\", function (ev) {\n"
+							L"      ev.preventDefault();\n"
+							L"      chrome.webview.postMessageWithAdditionalObjects('filedragdrop:' + el.id, event.dataTransfer.files);\n"
+							L"      ondrop(ev);\n"
+							L"    });\n"
+							L"  }\n"
+							L"};";
 						EventRegistrationToken webMessageToken;
-						_webviewWindow->AddScriptToExecuteOnDocumentCreated(L"window.external = { sendMessage: function(message) { window.chrome.webview.postMessage(message); }, receiveMessage: function(callback) { window.chrome.webview.addEventListener(\'message\', function(e) { callback(e.data); }); } };", nullptr);
+						_webviewWindow->AddScriptToExecuteOnDocumentCreated(scriptSource, nullptr);
 						_webviewWindow->add_WebMessageReceived(Callback<ICoreWebView2WebMessageReceivedEventHandler>(
 							[&](ICoreWebView2* webview, ICoreWebView2WebMessageReceivedEventArgs* args) -> HRESULT {
 								wil::unique_cotaskmem_string message;
