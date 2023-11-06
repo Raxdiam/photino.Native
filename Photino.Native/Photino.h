@@ -263,6 +263,7 @@ public:
 	AutoString GetTitle();
 	void GetTopmost(bool *topmost);
 	void GetZoom(int *zoom);
+    void GetCurrentMonitor(Monitor &monitor);
 
 	void NavigateToString(AutoString content);
 	void NavigateToUrl(AutoString url);
