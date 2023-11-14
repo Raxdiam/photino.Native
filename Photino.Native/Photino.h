@@ -51,6 +51,33 @@ typedef bool (*ClosingCallback)();
 typedef void (*FocusInCallback)();
 typedef void (*FocusOutCallback)();
 
+enum class ModifierKeys : int {
+	None = 0,
+	Control = 1 << 0,
+	Shift = 1 << 1,
+	Alt = 1 << 2
+};
+
+inline ModifierKeys operator&(ModifierKeys a, ModifierKeys b) {
+	return static_cast<ModifierKeys>(static_cast<int>(a) & static_cast<int>(b));
+}
+
+struct Menu {
+	int Id;
+	wchar_t* LabelWide;
+	char* Label;
+	bool IsSeparator;
+	bool IsEnabled;
+	wchar_t* KeyLabelWide;
+	char* KeyLabel;
+	unsigned char KeyChar;
+	char* KeyStr;
+	ModifierKeys Modifiers;
+	Menu* SubMenus;
+	int SubMenuCount;
+	ACTION* Action;
+};
+
 class PhotinoDialog;
 class Photino;
 
@@ -158,6 +185,8 @@ private:
 #ifdef _WIN32
 	static HINSTANCE _hInstance;
 	HWND _hWnd;
+	HACCEL _hAccelTable;
+	std::map<int, ACTION> _menuActions;
 	WinToastHandler *_toastHandler;
 	wil::com_ptr<ICoreWebView2Environment> _webviewEnvironment;
 	wil::com_ptr<ICoreWebView2> _webviewWindow;
@@ -165,6 +194,8 @@ private:
 	bool EnsureWebViewIsInstalled();
 	bool InstallWebView2();
 	void AttachWebView();
+	void CreateNativeMenu(const HMENU hMenu, const Menu* subMenus, const int subMenuCount);
+	static std::vector<ACCEL> CreateAccelArray(const Menu* menus, int menuCount);
 #elif __linux__
 	// GtkWidget* _window;
 	GtkWidget *_webview;
@@ -207,6 +238,7 @@ public:
 	static void Register(HINSTANCE hInstance);
 	static void SetWebView2RuntimePath(AutoString pathToWebView2);
 	HWND getHwnd();
+	std::map<int, ACTION> GetMenuActions();
 	void RefitContent();
 	void FocusWebView2();
 	int _minWidth;
@@ -279,6 +311,7 @@ public:
 	void SetTitle(AutoString title);
 	void SetTopmost(bool topmost);
 	void SetZoom(int zoom);
+	void SetMenuBar(Menu* menus, int menuCount);
 
 	void ShowNotification(AutoString title, AutoString message);
 	void WaitForExit();

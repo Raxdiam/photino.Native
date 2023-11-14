@@ -122,6 +122,10 @@
             window.external.sendMessage('setMaxSize');
         }
 
+        function SetMenuBar() {
+            window.external.sendMessage('setMenuBar');
+        }
+
         (() => {
   // The width and height of the captured photo. We will set the
   // width to the value defined here, but the height will be
@@ -261,6 +265,7 @@
     <button onclick="SetTopmost()">Topmost</button>
     <button onclick="SetFullScreen()">Kiosk</button>
     <button onclick="Close()">Close</button>
+    <button onclick="SetMenuBar()">Menu Bar</button>
     <br>
     <b>Size</b><br>
     <button onclick="Minimize()">Minimize</button>

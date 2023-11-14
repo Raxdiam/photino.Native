@@ -245,6 +245,11 @@ extern "C"
 	{
 		instance->SetZoom(zoom);
 	}
+
+	EXPORTED void Photino_SetMenuBar(Photino* instance, Menu* menus, int count)
+	{
+		instance->SetMenuBar(menus, count);
+	}
 	
 	EXPORTED void Photino_ShowNotification(Photino* instance, AutoString title, AutoString body)
 	{

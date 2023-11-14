@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -430,6 +431,40 @@ namespace PhotinoNET
             {
                 var result = currentWindow.ShowMessage("Title", "Testing...");
             }
+            else if (message == "setMenuBar") {
+                currentWindow.SetMenuBar(new MenuBar {
+                    Menus = {
+                        new Menu {
+                            Label = "File",
+                            IsEnabled = true,
+                            SubMenus = new() {
+                                new Menu {
+                                    Label = "&New",
+                                    IsEnabled = true,
+                                    Key = Keys.N,
+                                    Modifiers = ModifierKeys.Control | ModifierKeys.Alt,
+                                    Action = () => {
+                                        Log(sender, "Menu Item Action: New");
+                                    }
+                                },
+                                new Menu() {
+                                    Label = "&Open",
+                                    IsEnabled = true,
+                                    Key = Keys.O,
+                                    Modifiers = ModifierKeys.Control,
+                                    Action = () => {
+                                        Log(sender, "Menu Item Action: Open");
+                                    }
+                                }
+                            }
+                        },
+                        new Menu {
+                            Label = "Edit",
+                            IsEnabled = true,
+                        }
+                    }
+                });
+            }
             else
                 throw new Exception($"Unknown message '{message}'");
         }
@@ -442,6 +477,39 @@ namespace PhotinoNET
         private static void WindowCreated(object sender, EventArgs e)
         {
             Log(sender, "WindowCreated Callback Fired.");
+            ((PhotinoWindow)sender).SetMenuBar(new MenuBar
+            {
+                Menus = {
+                    new Menu {
+                        Label = "File",
+                        IsEnabled = true,
+                        SubMenus = new() {
+                            new Menu {
+                                Label = "&New",
+                                IsEnabled = true,
+                                Key = Keys.N,
+                                Modifiers = ModifierKeys.Control | ModifierKeys.Alt,
+                                Action = () => {
+                                    Log(sender, "Menu Item Action: New");
+                                }
+                            },
+                            new Menu() {
+                                Label = "&Open",
+                                IsEnabled = true,
+                                Key = Keys.O,
+                                Modifiers = ModifierKeys.Control,
+                                Action = () => {
+                                    Log(sender, "Menu Item Action: Open");
+                                }
+                            }
+                        }
+                    },
+                    new Menu {
+                        Label = "Edit",
+                        IsEnabled = true,
+                    }
+                }
+            });
         }
 
         private static void WindowLocationChanged(object sender, Point location)

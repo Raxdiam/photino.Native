@@ -283,6 +283,10 @@ HWND Photino::getHwnd()
 	return _hWnd;
 }
 
+std::map<int, ACTION> Photino::GetMenuActions() {
+	return _menuActions;
+}
+
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg)
@@ -317,7 +321,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		}
 		else 
 		{
-			Photino->FocusWebView2();
+			//Photino->FocusWebView2();
 			Photino->InvokeFocusIn();
 
 			return 0;
@@ -410,7 +414,24 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		}
 		return 0;
 	}
-	break;
+	case WM_COMMAND: {
+		Photino* Photino = hwndToPhotino[hwnd];
+		if (Photino) 
+		{
+			auto menuActions = Photino->GetMenuActions();
+			const int wmId = LOWORD(wParam);
+			const auto it = menuActions.find(wmId);
+			if (it != menuActions.end())
+			{
+				auto action = it->second;
+				if (action != nullptr)
+				{
+					action();
+				}
+			}
+		}
+		return 0;
+	}
 	}
 
 	return DefWindowProc(hwnd, uMsg, wParam, lParam);
@@ -739,6 +760,78 @@ void Photino::SetZoom(int zoom)
 	//MessageBox(nullptr, msg, L"Setter", MB_OK);
 }
 
+void Photino::SetMenuBar(Menu* menus, int menuCount)
+{
+	const HMENU hCurrentMenu = GetMenu(_hWnd);
+	if (hCurrentMenu) {
+		DestroyMenu(hCurrentMenu);
+	}
+
+	if (_hAccelTable) {
+		DestroyAcceleratorTable(_hAccelTable);
+		_hAccelTable = nullptr;
+	}
+
+	const HMENU hMenu = CreateMenu();
+	CreateNativeMenu(hMenu, menus, menuCount);
+	SetMenu(_hWnd, hMenu);
+
+	auto accels = CreateAccelArray(menus, menuCount);
+	_hAccelTable = CreateAcceleratorTable(accels.data(), accels.size());
+}
+
+void Photino::CreateNativeMenu(const HMENU hMenu, const Menu* subMenus, const int subMenuCount)
+{
+	_menuActions.clear();
+
+	for (int i = 0; i < subMenuCount; ++i) {
+		const Menu& menu = subMenus[i];
+		UINT flags = MF_STRING;
+		if (!menu.IsEnabled) flags |= MF_GRAYED;
+		if (menu.IsSeparator) flags = MF_SEPARATOR;
+
+		if (menu.SubMenuCount > 0 && menu.SubMenus) {
+			HMENU hSubMenu = CreatePopupMenu();
+			CreateNativeMenu(hSubMenu, menu.SubMenus, menu.SubMenuCount);
+			AppendMenu(hMenu, flags | MF_POPUP, (UINT_PTR)hSubMenu, menu.LabelWide);
+		}
+		else {
+			AppendMenu(hMenu, flags, menu.Id, menu.LabelWide);
+			if (menu.Action)
+				_menuActions[menu.Id] = (ACTION)menu.Action;
+		}
+	}
+}
+
+std::vector<ACCEL> Photino::CreateAccelArray(const Menu* menus, int menuCount)
+{
+	std::vector<ACCEL> accels;
+
+	for (int i = 0; i < menuCount; ++i) {
+		const Menu& menu = menus[i];
+
+		if (menu.SubMenuCount <= 0 && menu.KeyChar != '\0') {
+			ACCEL accel = {};
+			accel.fVirt = FVIRTKEY;
+			if ((menu.Modifiers & ModifierKeys::Control) == ModifierKeys::Control) accel.fVirt |= FCONTROL;
+			if ((menu.Modifiers & ModifierKeys::Shift) == ModifierKeys::Shift) accel.fVirt |= FSHIFT;
+			if ((menu.Modifiers & ModifierKeys::Alt) == ModifierKeys::Alt) accel.fVirt |= FALT;
+
+			accel.key = menu.KeyChar;
+			accel.cmd = static_cast<WORD>(menu.Id);
+
+			accels.push_back(accel);
+		}
+
+		if (menu.SubMenuCount > 0) {
+			auto subMenuAccels = CreateAccelArray(menu.SubMenus, menu.SubMenuCount);
+			accels.insert(accels.end(), subMenuAccels.begin(), subMenuAccels.end());
+		}
+	}
+
+	return accels;
+}
+
 
 
 void Photino::ShowNotification(AutoString title, AutoString body)
@@ -761,8 +854,11 @@ void Photino::WaitForExit()
 	MSG msg = { };
 	while (GetMessage(&msg, NULL, 0, 0))
 	{
-		TranslateMessage(&msg);
-		DispatchMessage(&msg);
+		if (!TranslateAccelerator(_hWnd, _hAccelTable, &msg)) 
+		{
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
+		}
 	}
 }
 
