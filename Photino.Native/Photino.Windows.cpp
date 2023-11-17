@@ -777,7 +777,7 @@ void Photino::SetMenuBar(Menu* menus, int menuCount)
 	SetMenu(_hWnd, hMenu);
 
 	auto accels = CreateAccelArray(menus, menuCount);
-	_hAccelTable = CreateAcceleratorTable(accels.data(), accels.size());
+	_hAccelTable = CreateAcceleratorTable(accels.data(), static_cast<int>(accels.size()));
 }
 
 void Photino::CreateNativeMenu(const HMENU hMenu, const Menu* subMenus, const int subMenuCount)
@@ -1028,6 +1028,43 @@ void Photino::AttachWebView()
 								})
 							.Get(),
 									&permissionRequestedToken);
+
+						EventRegistrationToken acceleratorKeyPressedToken;
+						_webviewController->add_AcceleratorKeyPressed(
+							Callback<ICoreWebView2AcceleratorKeyPressedEventHandler>(
+								[&](ICoreWebView2Controller* sender, ICoreWebView2AcceleratorKeyPressedEventArgs* args) -> HRESULT {
+									COREWEBVIEW2_KEY_EVENT_KIND keyEventKind;
+									UINT virtKey;
+									INT keyLParam;
+
+									args->get_KeyEventKind(&keyEventKind);
+									args->get_VirtualKey(&virtKey);
+									args->get_KeyEventLParam(&keyLParam);
+
+									BOOL handled;
+									args->get_Handled(&handled);
+									if (!handled) {
+										UINT message = 0;
+										switch (keyEventKind) {
+											case COREWEBVIEW2_KEY_EVENT_KIND_KEY_DOWN:
+												message = WM_KEYDOWN;
+												break;
+											case COREWEBVIEW2_KEY_EVENT_KIND_SYSTEM_KEY_DOWN:
+												message = WM_SYSKEYDOWN;
+												break;
+											case COREWEBVIEW2_KEY_EVENT_KIND_KEY_UP:
+												message = WM_KEYUP;
+												break;
+											case COREWEBVIEW2_KEY_EVENT_KIND_SYSTEM_KEY_UP:
+												message = WM_SYSKEYUP;
+												break;
+										}
+										PostMessage(_hWnd, message, virtKey, keyLParam);
+									}
+
+									return S_OK;
+								})
+							.Get(), &acceleratorKeyPressedToken);
 
 						if (_startUrl != NULL)
 							NavigateToUrl(_startUrl);
