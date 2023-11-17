@@ -196,6 +196,7 @@ private:
 	void AttachWebView();
 	void CreateNativeMenu(const HMENU hMenu, const Menu* subMenus, const int subMenuCount);
 	static std::vector<ACCEL> CreateAccelArray(const Menu* menus, int menuCount);
+	static std::wstring FormayHoteyLabel(const Menu& menu);
 #elif __linux__
 	// GtkWidget* _window;
 	GtkWidget *_webview;

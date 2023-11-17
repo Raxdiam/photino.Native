@@ -796,7 +796,11 @@ void Photino::CreateNativeMenu(const HMENU hMenu, const Menu* subMenus, const in
 			AppendMenu(hMenu, flags | MF_POPUP, (UINT_PTR)hSubMenu, menu.LabelWide);
 		}
 		else {
-			AppendMenu(hMenu, flags, menu.Id, menu.LabelWide);
+			std::wstring formattedLabel = menu.LabelWide;
+			if (menu.KeyChar != '\0')
+				formattedLabel += L"\t" + FormayHoteyLabel(menu);
+
+			AppendMenu(hMenu, flags, menu.Id, formattedLabel.c_str());
 			if (menu.Action)
 				_menuActions[menu.Id] = (ACTION)menu.Action;
 		}
@@ -830,6 +834,20 @@ std::vector<ACCEL> Photino::CreateAccelArray(const Menu* menus, int menuCount)
 	}
 
 	return accels;
+}
+
+std::wstring Photino::FormayHoteyLabel(const Menu& menu)
+{
+	std::wstring hotkey;
+
+	if ((menu.Modifiers & ModifierKeys::Control) == ModifierKeys::Control) hotkey += L"Ctrl+";
+	if ((menu.Modifiers & ModifierKeys::Shift) == ModifierKeys::Shift) hotkey += L"Shift+";
+	if ((menu.Modifiers & ModifierKeys::Alt) == ModifierKeys::Alt) hotkey += L"Alt+";
+
+	const wchar_t keyChar[2] = { menu.KeyChar, L'\0' };
+	hotkey += keyChar;
+
+	return hotkey;
 }
 
 
