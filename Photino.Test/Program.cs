@@ -62,12 +62,12 @@ namespace Photino.NET
             //}
 
             mainWindow = new PhotinoWindow()
-                //.Load(new Uri("https://google.com"))
-                //.Load("https://duckduckgo.com/?t=ffab&q=user+agent+&ia=answer")
-                //.Load("https://localhost:8080/")
-                .Load("wwwroot/main.html")
-                //.Load("wwwroot/index.html")
-                //.LoadRawString("<h1>Hello Photino!</h1>")
+                //.Navigate(new Uri("https://google.com"))
+                //.Navigate("https://duckduckgo.com/?t=ffab&q=user+agent+&ia=answer")
+                //.Navigate("https://localhost:8080/")
+                .Navigate("wwwroot/main.html")
+                //.Navigate("wwwroot/index.html")
+                //.NavigateToString("<h1>Hello Photino!</h1>")
 
                 //Window settings
                 //.SetIconFile(iconFile)
@@ -145,9 +145,9 @@ namespace Photino.NET
 
             mainWindow = new PhotinoWindow
             {
-                //StartUrl = "https://google.com",
-                //StartUrl = "https://duckduckgo.com/?t=ffab&q=user+agent+&ia=answer",
-                StartUrl = "wwwroot/main.html",
+                //Source = new Uri("https://google.com"),
+                //Source = new Uri("https://duckduckgo.com/?t=ffab&q=user+agent+&ia=answer"),
+                Source = new Uri(Path.GetFullPath("wwwroot/main.html")),
                 //StartString = "<h1>Hello Photino!</h1>",
 
                 //Window settings
@@ -270,7 +270,7 @@ namespace Photino.NET
                 var x = new PhotinoWindow(currentWindow)
                     .SetTitle($"Child Window {_windowNumber++}")
                     //.SetIconFile(iconFile)
-                    .Load("wwwroot/main.html")
+                    .Navigate("wwwroot/main.html")
 
                     //.SetUseOsDefaultLocation(true)
                     //.SetHeight(600)

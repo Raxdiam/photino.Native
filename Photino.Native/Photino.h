@@ -267,9 +267,10 @@ public:
 	void GetTopmost(bool *topmost);
 	void GetZoom(int *zoom);
 	void GetIgnoreCertificateErrorsEnabled(bool* enabled);
+	AutoString GetSource();
 
 	void NavigateToString(AutoString content);
-	void NavigateToUrl(AutoString url);
+	void Navigate(AutoString url);
 	void Restore(); // required anymore?backward compat?
 	void SendWebMessage(AutoString message);
 

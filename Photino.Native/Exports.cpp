@@ -131,6 +131,11 @@ extern "C"
 		instance->GetIgnoreCertificateErrorsEnabled(disabled);
 	}
 
+	EXPORTED AutoString Photino_GetSource(Photino* instance)
+	{
+		return instance->GetSource();
+	}
+
 	EXPORTED void Photino_GetPosition(Photino* instance, int* x, int* y)
 	{
 		instance->GetPosition(x, y);
@@ -171,9 +176,9 @@ extern "C"
 		instance->NavigateToString(content);
 	}
 
-	EXPORTED void Photino_NavigateToUrl(Photino* instance, AutoString url)
+	EXPORTED void Photino_Navigate(Photino* instance, AutoString url)
 	{
-		instance->NavigateToUrl(url);
+		instance->Navigate(url);
 	}
 
 	EXPORTED void Photino_Restore(Photino* instance)
